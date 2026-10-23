@@ -1,0 +1,41 @@
+{
+  "timestamp": "2026-10-20T12:33:15.689835+00:00",
+  "python": "C:\\Users\\User\\Documents\\Codex\\2026-10-20\\exit-link-fastapi-python-tcp-socket\\outputs\\exit-link\\.venv\\Scripts\\python.exe",
+  "platform": "Windows-11-10.0.26200-SP0",
+  "loopback": {
+    "host": "127.0.0.1",
+    "success": false,
+    "stage": "connect",
+    "port": 64711,
+    "error": "PermissionError",
+    "errno": 13,
+    "winerror": 10013,
+    "detail": "[WinError 10013] 액세스 권한에 의해 숨겨진 소켓에 액세스를 시도했습니다"
+  },
+  "port_bind_checks": [
+    {
+      "port": 9101,
+      "bind_available": true
+    },
+    {
+      "port": 9102,
+      "bind_available": true
+    },
+    {
+      "port": 9103,
+      "bind_available": true
+    },
+    {
+      "port": 9104,
+      "bind_available": true
+    },
+    {
+      "port": 9105,
+      "bind_available": true
+    },
+    {
+      "port": 9106,
+      "bind_available": true
+    }
+  ]
+}

@@ -1,0 +1,11 @@
+﻿{
+    "recorded_at":  "2026-10-21T18:03:12.3407768+09:00",
+    "release_approved":  false,
+    "completed_cells_verified":  17,
+    "interrupted_cell":  "t017",
+    "replacement_plan":  "v3-a5d805da",
+    "audit_status":  "preflight_passed",
+    "audit_script":  "scripts/confirm_v3_audit.py",
+    "audit_type":  "aligned_v3_interruption",
+    "old_run":  "v3-70c9f1ea"
+}

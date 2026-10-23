@@ -1,0 +1,41 @@
+============================= test session starts =============================
+platform win32 -- Python 3.12.10, pytest-9.1.1, pluggy-1.7.0 -- C:\Users\User\Documents\Codex\2026-10-20\exit-link-fastapi-python-tcp-socket\outputs\exit-link\.venv\Scripts\python.exe
+cachedir: .pytest_cache
+rootdir: C:\Users\User\Documents\Codex\2026-10-20\exit-link-fastapi-python-tcp-socket\outputs\exit-link
+configfile: pyproject.toml
+plugins: anyio-4.15.1
+collecting ... collected 36 items / 5 deselected / 31 selected
+
+tests/test_topology.py::test_building_has_three_floors_and_two_exit_routes PASSED [  3%]
+tests/test_topology.py::test_six_nodes_map_to_building_with_unique_local_endpoints PASSED [  6%]
+tests/test_topology.py::test_communication_is_biconnected PASSED         [  9%]
+tests/test_topology.py::test_every_single_node_failure_keeps_survivors_connected[N1] PASSED [ 12%]
+tests/test_topology.py::test_every_single_node_failure_keeps_survivors_connected[N2] PASSED [ 16%]
+tests/test_topology.py::test_every_single_node_failure_keeps_survivors_connected[N3] PASSED [ 19%]
+tests/test_topology.py::test_every_single_node_failure_keeps_survivors_connected[N4] PASSED [ 22%]
+tests/test_topology.py::test_every_single_node_failure_keeps_survivors_connected[N5] PASSED [ 25%]
+tests/test_topology.py::test_every_single_node_failure_keeps_survivors_connected[N6] PASSED [ 29%]
+tests/test_topology.py::test_graphs_are_separate_and_mutations_are_isolated PASSED [ 32%]
+tests/test_topology.py::test_invalid_communication_data_is_rejected[duplicate_node] PASSED [ 35%]
+tests/test_topology.py::test_invalid_communication_data_is_rejected[unknown_node] PASSED [ 38%]
+tests/test_topology.py::test_invalid_communication_data_is_rejected[self_loop] PASSED [ 41%]
+tests/test_topology.py::test_invalid_communication_data_is_rejected[duplicate_edge] PASSED [ 45%]
+tests/test_topology.py::test_invalid_communication_data_is_rejected[duplicate_endpoint] PASSED [ 48%]
+tests/test_topology.py::test_invalid_communication_data_is_rejected[measured_origin] PASSED [ 51%]
+tests/test_topology.py::test_invalid_building_data_is_rejected[negative_distance] PASSED [ 54%]
+tests/test_topology.py::test_invalid_building_data_is_rejected[cross_floor_corridor] PASSED [ 58%]
+tests/test_topology.py::test_invalid_building_data_is_rejected[invalid_stairs] PASSED [ 61%]
+tests/test_topology.py::test_invalid_building_data_is_rejected[missing_exit] PASSED [ 64%]
+tests/test_topology.py::test_invalid_building_data_is_rejected[missing_floor] PASSED [ 67%]
+tests/test_topology.py::test_unknown_physical_location_is_rejected PASSED [ 70%]
+tests/test_topology.py::test_custom_json_path_and_working_directory_independence PASSED [ 74%]
+tests/test_tcp_protocol.py::test_invalid_message_schema[changes0] PASSED [ 77%]
+tests/test_tcp_protocol.py::test_invalid_message_schema[changes1] PASSED [ 80%]
+tests/test_tcp_protocol.py::test_invalid_message_schema[changes2] PASSED [ 83%]
+tests/test_tcp_protocol.py::test_invalid_message_schema[changes3] PASSED [ 87%]
+tests/test_tcp_protocol.py::test_invalid_message_schema[changes4] PASSED [ 90%]
+tests/test_tcp_protocol.py::test_invalid_message_schema[changes5] PASSED [ 93%]
+tests/test_tcp_protocol.py::test_invalid_message_schema[changes6] PASSED [ 96%]
+tests/test_tcp_protocol.py::test_invalid_message_schema[changes7] PASSED [100%]
+
+====================== 31 passed, 5 deselected in 0.84s =======================

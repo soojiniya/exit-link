@@ -1,0 +1,106 @@
+{
+  "$defs": {
+    "HazardUpdate": {
+      "additionalProperties": false,
+      "description": "Full replacement of synthetic hazards, not a partial patch.",
+      "properties": {
+        "data_origin": {
+          "const": "simulation",
+          "default": "simulation",
+          "title": "Data Origin",
+          "type": "string"
+        },
+        "fire_locations": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Fire Locations",
+          "type": "array"
+        },
+        "dangerous_nodes": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Dangerous Nodes",
+          "type": "array"
+        },
+        "blocked_nodes": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Blocked Nodes",
+          "type": "array"
+        },
+        "blocked_passages": {
+          "items": {
+            "$ref": "#/$defs/Passage"
+          },
+          "title": "Blocked Passages",
+          "type": "array"
+        }
+      },
+      "title": "HazardUpdate",
+      "type": "object"
+    },
+    "Passage": {
+      "additionalProperties": false,
+      "properties": {
+        "source": {
+          "title": "Source",
+          "type": "string"
+        },
+        "target": {
+          "title": "Target",
+          "type": "string"
+        }
+      },
+      "required": [
+        "source",
+        "target"
+      ],
+      "title": "Passage",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": {
+      "const": "1.0",
+      "default": "1.0",
+      "title": "Schema Version",
+      "type": "string"
+    },
+    "name": {
+      "title": "Name",
+      "type": "string"
+    },
+    "data_origin": {
+      "const": "simulation",
+      "default": "simulation",
+      "title": "Data Origin",
+      "type": "string"
+    },
+    "starts": {
+      "items": {
+        "type": "string"
+      },
+      "minItems": 1,
+      "title": "Starts",
+      "type": "array"
+    },
+    "steps": {
+      "items": {
+        "$ref": "#/$defs/HazardUpdate"
+      },
+      "title": "Steps",
+      "type": "array"
+    }
+  },
+  "required": [
+    "name",
+    "starts",
+    "steps"
+  ],
+  "title": "ScenarioDefinition",
+  "type": "object"
+}

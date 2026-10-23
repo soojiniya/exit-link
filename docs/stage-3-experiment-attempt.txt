@@ -1,0 +1,15 @@
+{
+  "preflight": {
+    "host": "127.0.0.1",
+    "success": false,
+    "stage": "connect",
+    "port": 52726,
+    "error": "PermissionError",
+    "errno": 13,
+    "winerror": 10013,
+    "detail": "[WinError 10013] 액세스 권한에 의해 숨겨진 소켓에 액세스를 시도했습니다"
+  },
+  "experiment_started": false,
+  "status": "blocked_before_experiment"
+}
+Results: C:\Users\User\Documents\Codex\2026-10-20\exit-link-fastapi-python-tcp-socket\outputs\exit-link\data\measured\stage3-experiment-20261020T125457Z-fb098021

@@ -1,0 +1,81 @@
+{
+  "additionalProperties": false,
+  "properties": {
+    "message_id": {
+      "format": "uuid",
+      "title": "Message Id",
+      "type": "string"
+    },
+    "scenario_id": {
+      "format": "uuid",
+      "title": "Scenario Id",
+      "type": "string"
+    },
+    "audience_id": {
+      "title": "Audience Id",
+      "type": "string"
+    },
+    "disposition": {
+      "enum": [
+        "applied",
+        "stale",
+        "duplicate",
+        "version_conflict",
+        "publisher_conflict"
+      ],
+      "title": "Disposition",
+      "type": "string"
+    },
+    "received_at": {
+      "format": "date-time",
+      "title": "Received At",
+      "type": "string"
+    },
+    "received_scenario_revision": {
+      "title": "Received Scenario Revision",
+      "type": "integer"
+    },
+    "received_route_version": {
+      "title": "Received Route Version",
+      "type": "integer"
+    },
+    "latest_scenario_revision": {
+      "title": "Latest Scenario Revision",
+      "type": "integer"
+    },
+    "latest_route_version": {
+      "title": "Latest Route Version",
+      "type": "integer"
+    },
+    "latest_guidance_id": {
+      "format": "uuid",
+      "title": "Latest Guidance Id",
+      "type": "string"
+    },
+    "content_digest": {
+      "pattern": "^[0-9a-f]{64}$",
+      "title": "Content Digest",
+      "type": "string"
+    },
+    "human_evacuation_verified": {
+      "const": false,
+      "default": false,
+      "title": "Human Evacuation Verified",
+      "type": "boolean"
+    }
+  },
+  "required": [
+    "message_id",
+    "scenario_id",
+    "audience_id",
+    "disposition",
+    "received_scenario_revision",
+    "received_route_version",
+    "latest_scenario_revision",
+    "latest_route_version",
+    "latest_guidance_id",
+    "content_digest"
+  ],
+  "title": "GuidanceReceipt",
+  "type": "object"
+}

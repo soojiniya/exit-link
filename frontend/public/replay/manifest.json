@@ -1,0 +1,23 @@
+{
+  "schema": "exit-link-replay-manifest-v1",
+  "cases": [
+    {
+      "id": "t012",
+      "title": "정상 통신 · EXIT-LINK",
+      "description": "장애 없는 정상 경로에서 3건 ACK",
+      "file": "t012.json"
+    },
+    {
+      "id": "t010",
+      "title": "단일 장애 · 우회 성공",
+      "description": "N2 종료 후 경로 변경 및 3건 ACK",
+      "file": "t010.json"
+    },
+    {
+      "id": "t000",
+      "title": "연속 장애 · Fixed 실패",
+      "description": "전송 중 연속 장애와 ACK 미수신",
+      "file": "t000.json"
+    }
+  ]
+}

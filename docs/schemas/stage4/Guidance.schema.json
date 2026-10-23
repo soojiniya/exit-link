@@ -1,0 +1,135 @@
+{
+  "additionalProperties": false,
+  "properties": {
+    "kind": {
+      "const": "exit_link.evacuation_guidance",
+      "default": "exit_link.evacuation_guidance",
+      "title": "Kind",
+      "type": "string"
+    },
+    "schema_version": {
+      "const": "1.0",
+      "default": "1.0",
+      "title": "Schema Version",
+      "type": "string"
+    },
+    "guidance_id": {
+      "format": "uuid",
+      "title": "Guidance Id",
+      "type": "string"
+    },
+    "scenario_id": {
+      "format": "uuid",
+      "title": "Scenario Id",
+      "type": "string"
+    },
+    "building_id": {
+      "title": "Building Id",
+      "type": "string"
+    },
+    "scenario_revision": {
+      "minimum": 1,
+      "title": "Scenario Revision",
+      "type": "integer"
+    },
+    "route_version": {
+      "minimum": 1,
+      "title": "Route Version",
+      "type": "integer"
+    },
+    "audience_id": {
+      "pattern": "^[A-Za-z0-9_-]{1,64}$",
+      "title": "Audience Id",
+      "type": "string"
+    },
+    "start_location": {
+      "title": "Start Location",
+      "type": "string"
+    },
+    "source_node": {
+      "title": "Source Node",
+      "type": "string"
+    },
+    "destination_node": {
+      "title": "Destination Node",
+      "type": "string"
+    },
+    "issued_at": {
+      "format": "date-time",
+      "title": "Issued At",
+      "type": "string"
+    },
+    "status": {
+      "enum": [
+        "route_found",
+        "no_route"
+      ],
+      "title": "Status",
+      "type": "string"
+    },
+    "path": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Path",
+      "type": "array"
+    },
+    "exit_id": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "title": "Exit Id"
+    },
+    "distance_m": {
+      "anyOf": [
+        {
+          "minimum": 0,
+          "type": "number"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "title": "Distance M"
+    },
+    "data_origin": {
+      "const": "simulation",
+      "default": "simulation",
+      "title": "Data Origin",
+      "type": "string"
+    },
+    "real_world_safety_verified": {
+      "const": false,
+      "default": false,
+      "title": "Real World Safety Verified",
+      "type": "boolean"
+    },
+    "human_evacuation_verified": {
+      "const": false,
+      "default": false,
+      "title": "Human Evacuation Verified",
+      "type": "boolean"
+    }
+  },
+  "required": [
+    "scenario_id",
+    "building_id",
+    "scenario_revision",
+    "route_version",
+    "audience_id",
+    "start_location",
+    "source_node",
+    "destination_node",
+    "status",
+    "path",
+    "exit_id",
+    "distance_m"
+  ],
+  "title": "Guidance",
+  "type": "object"
+}

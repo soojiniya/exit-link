@@ -1,0 +1,32 @@
+{
+  "ordinary": {
+    "popen_pid": 21588,
+    "runtime": {
+      "pid": 22484,
+      "parent_pid": 21588,
+      "executable": "C:\\Users\\User\\Documents\\Codex\\2026-10-20\\exit-link-fastapi-python-tcp-socket\\outputs\\exit-link\\.venv\\Scripts\\python.exe",
+      "prefix": "C:\\Users\\User\\Documents\\Codex\\2026-10-20\\exit-link-fastapi-python-tcp-socket\\outputs\\exit-link\\.venv",
+      "pydantic_version": "2.14.1",
+      "exit_link_file": "C:\\Users\\User\\Documents\\Codex\\2026-10-20\\exit-link-fastapi-python-tcp-socket\\outputs\\exit-link\\src\\exit_link\\__init__.py"
+    },
+    "pid_matches": false
+  },
+  "direct": {
+    "popen_pid": 5100,
+    "runtime": {
+      "pid": 5100,
+      "parent_pid": 19008,
+      "executable": "C:\\Users\\User\\Documents\\Codex\\2026-10-20\\exit-link-fastapi-python-tcp-socket\\outputs\\exit-link\\.venv\\Scripts\\python.exe",
+      "prefix": "C:\\Users\\User\\Documents\\Codex\\2026-10-20\\exit-link-fastapi-python-tcp-socket\\outputs\\exit-link\\.venv",
+      "pydantic_version": "2.14.1",
+      "exit_link_file": "C:\\Users\\User\\Documents\\Codex\\2026-10-20\\exit-link-fastapi-python-tcp-socket\\outputs\\exit-link\\src\\exit_link\\__init__.py"
+    },
+    "pid_matches": true
+  },
+  "checks": {
+    "direct_pid_matches": true,
+    "direct_parent_matches": true,
+    "venv_prefix_preserved": true,
+    "venv_executable_preserved": true
+  }
+}

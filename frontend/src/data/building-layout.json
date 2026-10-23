@@ -1,0 +1,53 @@
+{
+  "schema_version": "layout-1.0",
+  "building_id": "SYNTHETIC_BUILDING_01",
+  "layout_origin": "design_assumption",
+  "status": "draft_for_review",
+  "description": "3D 시각화 전용 가상 배치입니다. 실제 평면도나 측정값이 아니며, 백엔드 building.json의 위치 ID와 연결 관계만 참조합니다. 경로 계산에는 사용하지 않습니다.",
+  "unit": "m_assumed",
+  "floor_height": 3.6,
+  "plate": { "min": [4, 0], "max": [32, 18] },
+  "places": {
+    "F1_W":  { "position": [8, 9],  "footprint": [4, 7.5, 18, 10.5] },
+    "F1_E":  { "position": [28, 9], "footprint": [18, 7.5, 32, 10.5] },
+    "F1_SW": { "position": [8, 14], "footprint": [4, 10.5, 10, 18] },
+    "F1_SE": { "position": [28, 14], "footprint": [26, 10.5, 32, 18] },
+    "F2_W":  { "position": [8, 9],  "footprint": [4, 7.5, 18, 10.5] },
+    "F2_E":  { "position": [28, 9], "footprint": [18, 7.5, 32, 10.5] },
+    "F2_SW": { "position": [8, 14], "footprint": [4, 10.5, 10, 18] },
+    "F2_SE": { "position": [28, 14], "footprint": [26, 10.5, 32, 18] },
+    "F3_W":  { "position": [8, 9],  "footprint": [4, 7.5, 18, 10.5] },
+    "F3_E":  { "position": [28, 9], "footprint": [18, 7.5, 32, 10.5] },
+    "F3_SW": { "position": [8, 14], "footprint": [4, 10.5, 10, 18] },
+    "F3_SE": { "position": [28, 14], "footprint": [26, 10.5, 32, 18] },
+    "EXIT_W": { "position": [4, 9],  "footprint": [2.2, 7.8, 4, 10.2] },
+    "EXIT_E": { "position": [32, 9], "footprint": [32, 7.8, 33.8, 10.2] }
+  },
+  "corridor": { "rect": [4, 7.5, 32, 10.5] },
+  "stair_cores": [
+    { "suffix": "SW", "rect": [4, 10.5, 10, 18], "door": { "axis": "x", "at": 8, "z": 10.5, "width": 1.6 } },
+    { "suffix": "SE", "rect": [26, 10.5, 32, 18], "door": { "axis": "x", "at": 28, "z": 10.5, "width": 1.6 } }
+  ],
+  "walls": [
+    { "id": "ext_n", "kind": "exterior", "a": [4, 0],  "b": [32, 0],  "windows": true, "openings": [] },
+    { "id": "ext_e", "kind": "exterior", "a": [32, 0], "b": [32, 18], "windows": true, "openings": [{ "at": 9, "width": 2.4, "floors": [1], "place_id": "EXIT_E" }] },
+    { "id": "ext_s", "kind": "exterior", "a": [32, 18], "b": [4, 18], "windows": true, "openings": [] },
+    { "id": "ext_w", "kind": "exterior", "a": [4, 18], "b": [4, 0],  "windows": true, "openings": [{ "at": 9, "width": 2.4, "floors": [1], "place_id": "EXIT_W" }] },
+    { "id": "cor_n", "kind": "partition", "a": [4, 7.5],  "b": [32, 7.5],  "openings": [{ "at": 9.5, "width": 1.2 }, { "at": 16.0, "width": 1.2 }, { "at": 20.0, "width": 1.6 }, { "at": 27.0, "width": 1.2 }] },
+    { "id": "cor_s", "kind": "partition", "a": [4, 10.5], "b": [32, 10.5], "openings": [{ "at": 8, "width": 1.6 }, { "at": 14, "width": 1.2 }, { "at": 22, "width": 1.6 }, { "at": 28, "width": 1.6 }] },
+    { "id": "n_p1", "kind": "partition", "a": [11, 0], "b": [11, 7.5], "openings": [] },
+    { "id": "n_p2", "kind": "glass",     "a": [18, 0], "b": [18, 7.5], "openings": [] },
+    { "id": "n_p3", "kind": "partition", "a": [25, 0], "b": [25, 7.5], "openings": [] },
+    { "id": "s_p1", "kind": "partition", "a": [10, 10.5], "b": [10, 18], "openings": [] },
+    { "id": "s_p2", "kind": "glass",     "a": [18, 10.5], "b": [18, 18], "openings": [] },
+    { "id": "s_p3", "kind": "partition", "a": [26, 10.5], "b": [26, 18], "openings": [] }
+  ],
+  "decor_rooms": [
+    { "id": "R_N1", "label": "사무실 A", "rect": [4, 0, 11, 7.5],     "furnish": "office" },
+    { "id": "R_N2", "label": "사무실 B", "rect": [11, 0, 18, 7.5],    "furnish": "office" },
+    { "id": "R_N3", "label": "회의실",   "rect": [18, 0, 25, 7.5],    "furnish": "meeting" },
+    { "id": "R_N4", "label": "사무실 C", "rect": [25, 0, 32, 7.5],    "furnish": "office" },
+    { "id": "R_S1", "label": "사무실 D", "rect": [10, 10.5, 18, 18],  "furnish": "office" },
+    { "id": "R_S2", "label": "라운지",   "rect": [18, 10.5, 26, 18],  "furnish": "lounge" }
+  ]
+}

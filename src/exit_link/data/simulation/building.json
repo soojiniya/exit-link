@@ -1,0 +1,191 @@
+{
+  "metadata": {
+    "schema_version": "1.0",
+    "data_origin": "simulation",
+    "description": "실제 평면도가 아닌 가상 3층 건물. 모든 거리는 설계용 가정값이며 실제 측정값이 아닙니다."
+  },
+  "building_id": "SYNTHETIC_BUILDING_01",
+  "floors": [
+    1,
+    2,
+    3
+  ],
+  "nodes": [
+    {
+      "id": "F1_W",
+      "floor": 1,
+      "kind": "corridor",
+      "label": "1층 서쪽 복도"
+    },
+    {
+      "id": "F1_E",
+      "floor": 1,
+      "kind": "corridor",
+      "label": "1층 동쪽 복도"
+    },
+    {
+      "id": "F1_SW",
+      "floor": 1,
+      "kind": "stair",
+      "label": "1층 서쪽 계단참"
+    },
+    {
+      "id": "F1_SE",
+      "floor": 1,
+      "kind": "stair",
+      "label": "1층 동쪽 계단참"
+    },
+    {
+      "id": "F2_W",
+      "floor": 2,
+      "kind": "corridor",
+      "label": "2층 서쪽 복도"
+    },
+    {
+      "id": "F2_E",
+      "floor": 2,
+      "kind": "corridor",
+      "label": "2층 동쪽 복도"
+    },
+    {
+      "id": "F2_SW",
+      "floor": 2,
+      "kind": "stair",
+      "label": "2층 서쪽 계단참"
+    },
+    {
+      "id": "F2_SE",
+      "floor": 2,
+      "kind": "stair",
+      "label": "2층 동쪽 계단참"
+    },
+    {
+      "id": "F3_W",
+      "floor": 3,
+      "kind": "corridor",
+      "label": "3층 서쪽 복도"
+    },
+    {
+      "id": "F3_E",
+      "floor": 3,
+      "kind": "corridor",
+      "label": "3층 동쪽 복도"
+    },
+    {
+      "id": "F3_SW",
+      "floor": 3,
+      "kind": "stair",
+      "label": "3층 서쪽 계단참"
+    },
+    {
+      "id": "F3_SE",
+      "floor": 3,
+      "kind": "stair",
+      "label": "3층 동쪽 계단참"
+    },
+    {
+      "id": "EXIT_W",
+      "floor": 1,
+      "kind": "exit",
+      "label": "1층 서쪽 외부 비상구"
+    },
+    {
+      "id": "EXIT_E",
+      "floor": 1,
+      "kind": "exit",
+      "label": "1층 동쪽 외부 비상구"
+    }
+  ],
+  "edges": [
+    {
+      "source": "F1_W",
+      "target": "F1_E",
+      "kind": "corridor",
+      "distance_m": 20
+    },
+    {
+      "source": "F1_W",
+      "target": "F1_SW",
+      "kind": "corridor",
+      "distance_m": 5
+    },
+    {
+      "source": "F1_E",
+      "target": "F1_SE",
+      "kind": "corridor",
+      "distance_m": 5
+    },
+    {
+      "source": "F2_W",
+      "target": "F2_E",
+      "kind": "corridor",
+      "distance_m": 20
+    },
+    {
+      "source": "F2_W",
+      "target": "F2_SW",
+      "kind": "corridor",
+      "distance_m": 5
+    },
+    {
+      "source": "F2_E",
+      "target": "F2_SE",
+      "kind": "corridor",
+      "distance_m": 5
+    },
+    {
+      "source": "F3_W",
+      "target": "F3_E",
+      "kind": "corridor",
+      "distance_m": 20
+    },
+    {
+      "source": "F3_W",
+      "target": "F3_SW",
+      "kind": "corridor",
+      "distance_m": 5
+    },
+    {
+      "source": "F3_E",
+      "target": "F3_SE",
+      "kind": "corridor",
+      "distance_m": 5
+    },
+    {
+      "source": "F1_SW",
+      "target": "F2_SW",
+      "kind": "stairs",
+      "distance_m": 8
+    },
+    {
+      "source": "F1_SE",
+      "target": "F2_SE",
+      "kind": "stairs",
+      "distance_m": 8
+    },
+    {
+      "source": "F2_SW",
+      "target": "F3_SW",
+      "kind": "stairs",
+      "distance_m": 8
+    },
+    {
+      "source": "F2_SE",
+      "target": "F3_SE",
+      "kind": "stairs",
+      "distance_m": 8
+    },
+    {
+      "source": "F1_W",
+      "target": "EXIT_W",
+      "kind": "exit_access",
+      "distance_m": 4
+    },
+    {
+      "source": "F1_E",
+      "target": "EXIT_E",
+      "kind": "exit_access",
+      "distance_m": 4
+    }
+  ]
+}

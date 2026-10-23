@@ -1,0 +1,442 @@
+{
+  "$defs": {
+    "Ack": {
+      "additionalProperties": false,
+      "properties": {
+        "type": {
+          "const": "ack",
+          "default": "ack",
+          "title": "Type",
+          "type": "string"
+        },
+        "message_id": {
+          "format": "uuid",
+          "title": "Message Id",
+          "type": "string"
+        },
+        "source": {
+          "title": "Source",
+          "type": "string"
+        },
+        "destination": {
+          "title": "Destination",
+          "type": "string"
+        },
+        "timestamp": {
+          "format": "date-time",
+          "title": "Timestamp",
+          "type": "string"
+        },
+        "route": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Route",
+          "type": "array"
+        },
+        "duplicate": {
+          "default": false,
+          "title": "Duplicate",
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "message_id",
+        "source",
+        "destination",
+        "route"
+      ],
+      "title": "Ack",
+      "type": "object"
+    },
+    "Attempt": {
+      "additionalProperties": false,
+      "properties": {
+        "number": {
+          "title": "Number",
+          "type": "integer"
+        },
+        "route": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Route",
+          "type": "array"
+        },
+        "started_at": {
+          "format": "date-time",
+          "title": "Started At",
+          "type": "string"
+        },
+        "duration_ms": {
+          "title": "Duration Ms",
+          "type": "number"
+        },
+        "route_calculation_ms": {
+          "title": "Route Calculation Ms",
+          "type": "number"
+        },
+        "outcome": {
+          "title": "Outcome",
+          "type": "string"
+        }
+      },
+      "required": [
+        "number",
+        "route",
+        "started_at",
+        "duration_ms",
+        "route_calculation_ms",
+        "outcome"
+      ],
+      "title": "Attempt",
+      "type": "object"
+    },
+    "DeliveryResult": {
+      "additionalProperties": false,
+      "properties": {
+        "type": {
+          "const": "delivery_result",
+          "default": "delivery_result",
+          "title": "Type",
+          "type": "string"
+        },
+        "message_id": {
+          "format": "uuid",
+          "title": "Message Id",
+          "type": "string"
+        },
+        "source": {
+          "title": "Source",
+          "type": "string"
+        },
+        "destination": {
+          "title": "Destination",
+          "type": "string"
+        },
+        "success": {
+          "title": "Success",
+          "type": "boolean"
+        },
+        "ack": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Ack"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "error": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/ErrorResponse"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "attempts": {
+          "items": {
+            "$ref": "#/$defs/Attempt"
+          },
+          "title": "Attempts",
+          "type": "array"
+        },
+        "retries": {
+          "title": "Retries",
+          "type": "integer"
+        },
+        "ttl_remaining": {
+          "title": "Ttl Remaining",
+          "type": "integer"
+        },
+        "elapsed_ms": {
+          "title": "Elapsed Ms",
+          "type": "number"
+        },
+        "route_calculation_ms": {
+          "title": "Route Calculation Ms",
+          "type": "number"
+        },
+        "recovery_after_first_failure_ms": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Recovery After First Failure Ms"
+        }
+      },
+      "required": [
+        "message_id",
+        "source",
+        "destination",
+        "success",
+        "attempts",
+        "retries",
+        "ttl_remaining",
+        "elapsed_ms",
+        "route_calculation_ms"
+      ],
+      "title": "DeliveryResult",
+      "type": "object"
+    },
+    "ErrorResponse": {
+      "additionalProperties": false,
+      "properties": {
+        "type": {
+          "const": "error",
+          "default": "error",
+          "title": "Type",
+          "type": "string"
+        },
+        "message_id": {
+          "anyOf": [
+            {
+              "format": "uuid",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Message Id"
+        },
+        "node": {
+          "title": "Node",
+          "type": "string"
+        },
+        "code": {
+          "title": "Code",
+          "type": "string"
+        },
+        "detail": {
+          "title": "Detail",
+          "type": "string"
+        }
+      },
+      "required": [
+        "node",
+        "code",
+        "detail"
+      ],
+      "title": "ErrorResponse",
+      "type": "object"
+    },
+    "GuidanceReceipt": {
+      "additionalProperties": false,
+      "properties": {
+        "message_id": {
+          "format": "uuid",
+          "title": "Message Id",
+          "type": "string"
+        },
+        "scenario_id": {
+          "format": "uuid",
+          "title": "Scenario Id",
+          "type": "string"
+        },
+        "audience_id": {
+          "title": "Audience Id",
+          "type": "string"
+        },
+        "disposition": {
+          "enum": [
+            "applied",
+            "stale",
+            "duplicate",
+            "version_conflict",
+            "publisher_conflict"
+          ],
+          "title": "Disposition",
+          "type": "string"
+        },
+        "received_at": {
+          "format": "date-time",
+          "title": "Received At",
+          "type": "string"
+        },
+        "received_scenario_revision": {
+          "title": "Received Scenario Revision",
+          "type": "integer"
+        },
+        "received_route_version": {
+          "title": "Received Route Version",
+          "type": "integer"
+        },
+        "latest_scenario_revision": {
+          "title": "Latest Scenario Revision",
+          "type": "integer"
+        },
+        "latest_route_version": {
+          "title": "Latest Route Version",
+          "type": "integer"
+        },
+        "latest_guidance_id": {
+          "format": "uuid",
+          "title": "Latest Guidance Id",
+          "type": "string"
+        },
+        "content_digest": {
+          "pattern": "^[0-9a-f]{64}$",
+          "title": "Content Digest",
+          "type": "string"
+        },
+        "human_evacuation_verified": {
+          "const": false,
+          "default": false,
+          "title": "Human Evacuation Verified",
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "message_id",
+        "scenario_id",
+        "audience_id",
+        "disposition",
+        "received_scenario_revision",
+        "received_route_version",
+        "latest_scenario_revision",
+        "latest_route_version",
+        "latest_guidance_id",
+        "content_digest"
+      ],
+      "title": "GuidanceReceipt",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": {
+      "const": "1.0",
+      "default": "1.0",
+      "title": "Schema Version",
+      "type": "string"
+    },
+    "message_id": {
+      "format": "uuid",
+      "title": "Message Id",
+      "type": "string"
+    },
+    "scenario_id": {
+      "format": "uuid",
+      "title": "Scenario Id",
+      "type": "string"
+    },
+    "scenario_revision": {
+      "title": "Scenario Revision",
+      "type": "integer"
+    },
+    "route_version": {
+      "title": "Route Version",
+      "type": "integer"
+    },
+    "audience_id": {
+      "title": "Audience Id",
+      "type": "string"
+    },
+    "source_node": {
+      "title": "Source Node",
+      "type": "string"
+    },
+    "destination_node": {
+      "title": "Destination Node",
+      "type": "string"
+    },
+    "observed_at": {
+      "format": "date-time",
+      "title": "Observed At",
+      "type": "string"
+    },
+    "ack_received": {
+      "title": "Ack Received",
+      "type": "boolean"
+    },
+    "transport_result": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/DeliveryResult"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null
+    },
+    "transport_error": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Transport Error"
+    },
+    "application_receipt": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/GuidanceReceipt"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null
+    },
+    "receipt_query_error": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Receipt Query Error"
+    },
+    "disaster_origin": {
+      "const": "simulation",
+      "default": "simulation",
+      "title": "Disaster Origin",
+      "type": "string"
+    },
+    "observation_origin": {
+      "const": "real_tcp_observation",
+      "default": "real_tcp_observation",
+      "title": "Observation Origin",
+      "type": "string"
+    },
+    "human_evacuation_verified": {
+      "const": false,
+      "default": false,
+      "title": "Human Evacuation Verified",
+      "type": "boolean"
+    }
+  },
+  "required": [
+    "message_id",
+    "scenario_id",
+    "scenario_revision",
+    "route_version",
+    "audience_id",
+    "source_node",
+    "destination_node",
+    "ack_received"
+  ],
+  "title": "GuidanceDelivery",
+  "type": "object"
+}

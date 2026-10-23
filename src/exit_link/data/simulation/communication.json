@@ -1,0 +1,77 @@
+{
+  "metadata": {
+    "schema_version": "1.0",
+    "data_origin": "simulation",
+    "description": "6개 가상 노드의 무방향 논리 링크. 순환망과 2층 보조 링크. 포트는 향후 로컬 TCP 프로세스용 예약 설정이며 현재 리스닝하지 않습니다."
+  },
+  "topology_id": "SYNTHETIC_NETWORK_01",
+  "directed": false,
+  "nodes": [
+    {
+      "id": "N1",
+      "location_id": "F1_W",
+      "host": "127.0.0.1",
+      "port": 9101
+    },
+    {
+      "id": "N2",
+      "location_id": "F1_E",
+      "host": "127.0.0.1",
+      "port": 9102
+    },
+    {
+      "id": "N3",
+      "location_id": "F2_W",
+      "host": "127.0.0.1",
+      "port": 9103
+    },
+    {
+      "id": "N4",
+      "location_id": "F2_E",
+      "host": "127.0.0.1",
+      "port": 9104
+    },
+    {
+      "id": "N5",
+      "location_id": "F3_W",
+      "host": "127.0.0.1",
+      "port": 9105
+    },
+    {
+      "id": "N6",
+      "location_id": "F3_E",
+      "host": "127.0.0.1",
+      "port": 9106
+    }
+  ],
+  "edges": [
+    {
+      "source": "N1",
+      "target": "N2"
+    },
+    {
+      "source": "N2",
+      "target": "N4"
+    },
+    {
+      "source": "N4",
+      "target": "N6"
+    },
+    {
+      "source": "N6",
+      "target": "N5"
+    },
+    {
+      "source": "N5",
+      "target": "N3"
+    },
+    {
+      "source": "N3",
+      "target": "N1"
+    },
+    {
+      "source": "N3",
+      "target": "N4"
+    }
+  ]
+}

@@ -1,0 +1,10 @@
+{
+  "schema_version": "1.0",
+  "name": "가상 서쪽 계단 화재 및 출구 차단 시나리오",
+  "data_origin": "simulation",
+  "starts": ["F3_W", "F2_E"],
+  "steps": [
+    {"fire_locations": ["F2_SW"], "dangerous_nodes": [], "blocked_nodes": [], "blocked_passages": []},
+    {"fire_locations": ["F2_SW"], "dangerous_nodes": [], "blocked_nodes": ["EXIT_W", "EXIT_E"], "blocked_passages": []}
+  ]
+}

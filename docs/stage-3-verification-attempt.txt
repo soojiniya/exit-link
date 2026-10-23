@@ -1,0 +1,17 @@
+{
+  "run_id": "20261020T125457Z-19816ba8",
+  "preflight": {
+    "host": "127.0.0.1",
+    "success": false,
+    "stage": "connect",
+    "port": 52724,
+    "error": "PermissionError",
+    "errno": 13,
+    "winerror": 10013,
+    "detail": "[WinError 10013] 액세스 권한에 의해 숨겨진 소켓에 액세스를 시도했습니다"
+  },
+  "pytest_started": false,
+  "pytest_exit_code": null,
+  "status": "blocked_before_pytest"
+}
+Results: C:\Users\User\Documents\Codex\2026-10-20\exit-link-fastapi-python-tcp-socket\outputs\exit-link\data\measured\stage3-tests-20261020T125457Z-19816ba8

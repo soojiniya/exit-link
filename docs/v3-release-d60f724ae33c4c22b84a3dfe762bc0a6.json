@@ -1,0 +1,15 @@
+{
+  "event": "manual_audit_release",
+  "approved_at": "2026-10-21T09:10:06.761549+00:00",
+  "old_run": "v3-70c9f1ea",
+  "replacement_plan": "v3-a5d805da",
+  "previous_owner": {
+    "state": "needs_audit",
+    "run_directory": "C:\\Users\\User\\Documents\\Codex\\2026-10-20\\exit-link-fastapi-python-tcp-socket\\outputs\\exit-link\\data\\measured\\v3-70c9f1ea",
+    "updated_at": "2026-10-21T05:05:55.572745+00:00"
+  },
+  "completed_cells_verified": 17,
+  "interrupted_cell": "t017",
+  "authorization": "explicit_approve_flag",
+  "old_run_replay_allowed": false
+}

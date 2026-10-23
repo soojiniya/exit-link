@@ -1,0 +1,63 @@
+{
+  "$defs": {
+    "Passage": {
+      "additionalProperties": false,
+      "properties": {
+        "source": {
+          "title": "Source",
+          "type": "string"
+        },
+        "target": {
+          "title": "Target",
+          "type": "string"
+        }
+      },
+      "required": [
+        "source",
+        "target"
+      ],
+      "title": "Passage",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "description": "Full replacement of synthetic hazards, not a partial patch.",
+  "properties": {
+    "data_origin": {
+      "const": "simulation",
+      "default": "simulation",
+      "title": "Data Origin",
+      "type": "string"
+    },
+    "fire_locations": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Fire Locations",
+      "type": "array"
+    },
+    "dangerous_nodes": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Dangerous Nodes",
+      "type": "array"
+    },
+    "blocked_nodes": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Blocked Nodes",
+      "type": "array"
+    },
+    "blocked_passages": {
+      "items": {
+        "$ref": "#/$defs/Passage"
+      },
+      "title": "Blocked Passages",
+      "type": "array"
+    }
+  },
+  "title": "HazardUpdate",
+  "type": "object"
+}

@@ -1,0 +1,21 @@
+{
+  "additionalProperties": false,
+  "properties": {
+    "type": {
+      "const": "guidance_query",
+      "default": "guidance_query",
+      "title": "Type",
+      "type": "string"
+    },
+    "message_id": {
+      "format": "uuid",
+      "title": "Message Id",
+      "type": "string"
+    }
+  },
+  "required": [
+    "message_id"
+  ],
+  "title": "GuidanceQuery",
+  "type": "object"
+}

@@ -1,0 +1,5661 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "EXIT-LINK",
+    "description": "Local dashboard API: synthetic disasters and actual loopback TCP observations",
+    "version": "0.5.0"
+  },
+  "paths": {
+    "/health": {
+      "get": {
+        "tags": [
+          "health"
+        ],
+        "summary": "Health",
+        "description": "Process liveness only; no node or TCP readiness claim.",
+        "operationId": "health_health_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HealthResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/building": {
+      "get": {
+        "tags": [
+          "building"
+        ],
+        "summary": "Building",
+        "operationId": "building_api_v1_building_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BuildingView"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflict",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Unprocessable Entity",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Too Many Requests",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Service Unavailable",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/building/floors/{floor}": {
+      "get": {
+        "tags": [
+          "building"
+        ],
+        "summary": "Floor",
+        "operationId": "floor_api_v1_building_floors__floor__get",
+        "parameters": [
+          {
+            "name": "floor",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Floor"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FloorView"
+                }
+              }
+            }
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description": "Bad Request"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description": "Forbidden"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description": "Conflict"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description": "Unprocessable Entity"
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description": "Too Many Requests"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description": "Service Unavailable"
+          }
+        }
+      }
+    },
+    "/api/v1/snapshot": {
+      "get": {
+        "tags": [
+          "state"
+        ],
+        "summary": "Snapshot",
+        "operationId": "snapshot_api_v1_snapshot_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BackendSnapshot"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflict",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Unprocessable Entity",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Too Many Requests",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Service Unavailable",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/network": {
+      "get": {
+        "tags": [
+          "network"
+        ],
+        "summary": "Network",
+        "operationId": "network_api_v1_network_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/NetworkView"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflict",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Unprocessable Entity",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Too Many Requests",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Service Unavailable",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/network/refresh": {
+      "post": {
+        "tags": [
+          "network"
+        ],
+        "summary": "Refresh Network",
+        "operationId": "refresh_network_api_v1_network_refresh_post",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/NetworkView"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflict",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Unprocessable Entity",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Too Many Requests",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Service Unavailable",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "APIKeyHeader": []
+          }
+        ]
+      }
+    },
+    "/api/v1/scenarios": {
+      "get": {
+        "tags": [
+          "scenarios"
+        ],
+        "summary": "Scenarios",
+        "operationId": "scenarios_api_v1_scenarios_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/ScenarioSnapshot"
+                  },
+                  "type": "array",
+                  "title": "Response Scenarios Api V1 Scenarios Get"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflict",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Unprocessable Entity",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Too Many Requests",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Service Unavailable",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "scenarios"
+        ],
+        "summary": "Create Scenario",
+        "operationId": "create_scenario_api_v1_scenarios_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ScenarioCreate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ScenarioSnapshot"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflict",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Unprocessable Entity",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Too Many Requests",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Service Unavailable",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "APIKeyHeader": []
+          }
+        ]
+      }
+    },
+    "/api/v1/scenarios/{scenario_id}": {
+      "get": {
+        "tags": [
+          "scenarios"
+        ],
+        "summary": "Scenario",
+        "operationId": "scenario_api_v1_scenarios__scenario_id__get",
+        "parameters": [
+          {
+            "name": "scenario_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Scenario Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ScenarioSnapshot"
+                }
+              }
+            }
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description": "Bad Request"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description": "Forbidden"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description": "Conflict"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description": "Unprocessable Entity"
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description": "Too Many Requests"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description": "Service Unavailable"
+          }
+        }
+      }
+    },
+    "/api/v1/scenarios/{scenario_id}/hazards": {
+      "get": {
+        "tags": [
+          "scenarios"
+        ],
+        "summary": "Hazards",
+        "operationId": "hazards_api_v1_scenarios__scenario_id__hazards_get",
+        "parameters": [
+          {
+            "name": "scenario_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Scenario Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HazardUpdate"
+                }
+              }
+            }
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description": "Bad Request"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description": "Forbidden"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description": "Conflict"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description": "Unprocessable Entity"
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description": "Too Many Requests"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description": "Service Unavailable"
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "scenarios"
+        ],
+        "summary": "Replace Hazards",
+        "operationId": "replace_hazards_api_v1_scenarios__scenario_id__hazards_put",
+        "security": [
+          {
+            "APIKeyHeader": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "scenario_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Scenario Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/HazardReplace"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ScenarioSnapshot"
+                }
+              }
+            }
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description": "Bad Request"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description": "Forbidden"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description": "Conflict"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description": "Unprocessable Entity"
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description": "Too Many Requests"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description": "Service Unavailable"
+          }
+        }
+      }
+    },
+    "/api/v1/scenarios/{scenario_id}/plans": {
+      "get": {
+        "tags": [
+          "routes"
+        ],
+        "summary": "Plans",
+        "operationId": "plans_api_v1_scenarios__scenario_id__plans_get",
+        "parameters": [
+          {
+            "name": "scenario_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Scenario Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/EvacuationPlan"
+                  },
+                  "title": "Response Plans Api V1 Scenarios  Scenario Id  Plans Get"
+                }
+              }
+            }
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description": "Bad Request"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description": "Forbidden"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description": "Conflict"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description": "Unprocessable Entity"
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description": "Too Many Requests"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description": "Service Unavailable"
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "routes"
+        ],
+        "summary": "Plan",
+        "operationId": "plan_api_v1_scenarios__scenario_id__plans_post",
+        "security": [
+          {
+            "APIKeyHeader": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "scenario_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Scenario Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PlanRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EvacuationPlan"
+                }
+              }
+            }
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description": "Bad Request"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description": "Forbidden"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description": "Conflict"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description": "Unprocessable Entity"
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description": "Too Many Requests"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description": "Service Unavailable"
+          }
+        }
+      }
+    },
+    "/api/v1/scenarios/{scenario_id}/guidance": {
+      "post": {
+        "tags": [
+          "guidance"
+        ],
+        "summary": "Send",
+        "operationId": "send_api_v1_scenarios__scenario_id__guidance_post",
+        "security": [
+          {
+            "APIKeyHeader": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "scenario_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Scenario Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/GuidanceSend"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GuidanceDelivery"
+                }
+              }
+            }
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description": "Bad Request"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description": "Forbidden"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description": "Conflict"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description": "Unprocessable Entity"
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description": "Too Many Requests"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description": "Service Unavailable"
+          }
+        }
+      }
+    },
+    "/api/v1/deliveries": {
+      "get": {
+        "tags": [
+          "guidance"
+        ],
+        "summary": "Deliveries",
+        "operationId": "deliveries_api_v1_deliveries_get",
+        "parameters": [
+          {
+            "name": "scenario_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Scenario Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/GuidanceDelivery"
+                  },
+                  "title": "Response Deliveries Api V1 Deliveries Get"
+                }
+              }
+            }
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description": "Bad Request"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description": "Forbidden"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description": "Conflict"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description": "Unprocessable Entity"
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description": "Too Many Requests"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description": "Service Unavailable"
+          }
+        }
+      }
+    },
+    "/api/v1/deliveries/{message_id}": {
+      "get": {
+        "tags": [
+          "guidance"
+        ],
+        "summary": "Delivery",
+        "operationId": "delivery_api_v1_deliveries__message_id__get",
+        "parameters": [
+          {
+            "name": "message_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Message Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GuidanceDelivery"
+                }
+              }
+            }
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description": "Bad Request"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description": "Forbidden"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description": "Conflict"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description": "Unprocessable Entity"
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description": "Too Many Requests"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description": "Service Unavailable"
+          }
+        }
+      }
+    },
+    "/api/v1/experiment": {
+      "get": {
+        "tags": [
+          "experiments"
+        ],
+        "summary": "Experiment",
+        "operationId": "experiment_api_v1_experiment_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ExperimentView"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflict",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Unprocessable Entity",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Too Many Requests",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Service Unavailable",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "experiments"
+        ],
+        "summary": "Start Experiment",
+        "operationId": "start_experiment_api_v1_experiment_post",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ExperimentView"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflict",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Unprocessable Entity",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Too Many Requests",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Service Unavailable",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "APIKeyHeader": []
+          }
+        ]
+      },
+      "delete": {
+        "tags": [
+          "experiments"
+        ],
+        "summary": "Stop Experiment",
+        "operationId": "stop_experiment_api_v1_experiment_delete",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ExperimentView"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflict",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Unprocessable Entity",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Too Many Requests",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Service Unavailable",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "APIKeyHeader": []
+          }
+        ]
+      }
+    },
+    "/api/v1/experiment/nodes/{node_id}/fail": {
+      "post": {
+        "tags": [
+          "experiments"
+        ],
+        "summary": "Fail Node",
+        "operationId": "fail_node_api_v1_experiment_nodes__node_id__fail_post",
+        "security": [
+          {
+            "APIKeyHeader": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "node_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Node Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ExperimentView"
+                }
+              }
+            }
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description": "Bad Request"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description": "Forbidden"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description": "Conflict"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description": "Unprocessable Entity"
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description": "Too Many Requests"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description": "Service Unavailable"
+          }
+        }
+      }
+    },
+    "/api/v1/experiment/nodes/{node_id}/recover": {
+      "post": {
+        "tags": [
+          "experiments"
+        ],
+        "summary": "Recover Node",
+        "operationId": "recover_node_api_v1_experiment_nodes__node_id__recover_post",
+        "security": [
+          {
+            "APIKeyHeader": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "node_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Node Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ExperimentView"
+                }
+              }
+            }
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description": "Bad Request"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description": "Forbidden"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description": "Conflict"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description": "Unprocessable Entity"
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description": "Too Many Requests"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description": "Service Unavailable"
+          }
+        }
+      }
+    },
+    "/api/v1/events": {
+      "get": {
+        "tags": [
+          "events"
+        ],
+        "summary": "Events",
+        "operationId": "events_api_v1_events_get",
+        "parameters": [
+          {
+            "name": "stream_id",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Stream Id"
+            }
+          },
+          {
+            "name": "after",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "minimum": 0,
+              "title": "After"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EventPage"
+                }
+              }
+            }
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description": "Bad Request"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description": "Forbidden"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description": "Conflict"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description": "Unprocessable Entity"
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description": "Too Many Requests"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description": "Service Unavailable"
+          }
+        }
+      }
+    },
+    "/api/v1/history/status": {
+      "get": {
+        "tags": [
+          "persistent history"
+        ],
+        "summary": "Status",
+        "operationId": "status_api_v1_history_status_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StorageStatus"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Service Unavailable",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/history/experiments": {
+      "get": {
+        "tags": [
+          "persistent history"
+        ],
+        "summary": "Experiments",
+        "operationId": "experiments_api_v1_history_experiments_get",
+        "parameters": [
+          {
+            "name": "cursor",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "integer",
+                  "minimum": 1
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Cursor"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 100,
+              "minimum": 1,
+              "default": 50,
+              "title": "Limit"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ExperimentPage"
+                }
+              }
+            }
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description": "Forbidden"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description": "Service Unavailable"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/history/comparison": {
+      "get": {
+        "tags": [
+          "persistent history"
+        ],
+        "summary": "Comparison",
+        "operationId": "comparison_api_v1_history_comparison_get",
+        "parameters": [
+          {
+            "name": "experiment_id",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "format": "uuid"
+              },
+              "minItems": 1,
+              "maxItems": 20,
+              "title": "Experiment Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ComparisonPage"
+                }
+              }
+            }
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description": "Forbidden"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description": "Service Unavailable"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/history/experiments/{experiment_id}": {
+      "get": {
+        "tags": [
+          "persistent history"
+        ],
+        "summary": "Detail",
+        "operationId": "detail_api_v1_history_experiments__experiment_id__get",
+        "parameters": [
+          {
+            "name": "experiment_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Experiment Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ExperimentHistory"
+                }
+              }
+            }
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description": "Forbidden"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description": "Service Unavailable"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/history/experiments/{experiment_id}/events": {
+      "get": {
+        "tags": [
+          "persistent history"
+        ],
+        "summary": "Events",
+        "operationId": "events_api_v1_history_experiments__experiment_id__events_get",
+        "parameters": [
+          {
+            "name": "experiment_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Experiment Id"
+            }
+          },
+          {
+            "name": "after",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 0,
+              "default": 0,
+              "title": "After"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 200,
+              "minimum": 1,
+              "default": 100,
+              "title": "Limit"
+            }
+          },
+          {
+            "name": "event_type",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "maxLength": 64
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Event Type"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ArchiveEventPage"
+                }
+              }
+            }
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description": "Forbidden"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description": "Service Unavailable"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/history/experiments/{experiment_id}/deliveries": {
+      "get": {
+        "tags": [
+          "persistent history"
+        ],
+        "summary": "Deliveries",
+        "operationId": "deliveries_api_v1_history_experiments__experiment_id__deliveries_get",
+        "parameters": [
+          {
+            "name": "experiment_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Experiment Id"
+            }
+          },
+          {
+            "name": "cursor",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "integer",
+                  "minimum": 1
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Cursor"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 100,
+              "minimum": 1,
+              "default": 50,
+              "title": "Limit"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DeliveryHistoryPage"
+                }
+              }
+            }
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description": "Forbidden"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description": "Service Unavailable"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/history/experiments/{experiment_id}/controls": {
+      "get": {
+        "tags": [
+          "persistent history"
+        ],
+        "summary": "Controls",
+        "operationId": "controls_api_v1_history_experiments__experiment_id__controls_get",
+        "parameters": [
+          {
+            "name": "experiment_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Experiment Id"
+            }
+          },
+          {
+            "name": "cursor",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "integer",
+                  "minimum": 1
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Cursor"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 100,
+              "minimum": 1,
+              "default": 50,
+              "title": "Limit"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ControlHistoryPage"
+                }
+              }
+            }
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description": "Forbidden"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description": "Service Unavailable"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "Ack": {
+        "properties": {
+          "type": {
+            "type": "string",
+            "const": "ack",
+            "title": "Type",
+            "default": "ack"
+          },
+          "message_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Message Id"
+          },
+          "source": {
+            "type": "string",
+            "title": "Source"
+          },
+          "destination": {
+            "type": "string",
+            "title": "Destination"
+          },
+          "timestamp": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Timestamp"
+          },
+          "route": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Route"
+          },
+          "duplicate": {
+            "type": "boolean",
+            "title": "Duplicate",
+            "default": false
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "message_id",
+          "source",
+          "destination",
+          "route"
+        ],
+        "title": "Ack"
+      },
+      "Advertisement": {
+        "properties": {
+          "origin": {
+            "type": "string",
+            "title": "Origin"
+          },
+          "epoch": {
+            "type": "integer",
+            "exclusiveMinimum": 0.0,
+            "title": "Epoch"
+          },
+          "sequence": {
+            "type": "integer",
+            "minimum": 1.0,
+            "title": "Sequence"
+          },
+          "generated_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Generated At"
+          },
+          "links": {
+            "additionalProperties": {
+              "type": "string",
+              "enum": [
+                "unknown",
+                "up",
+                "suspect",
+                "down"
+              ]
+            },
+            "type": "object",
+            "title": "Links"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "origin",
+          "epoch",
+          "sequence",
+          "generated_at",
+          "links"
+        ],
+        "title": "Advertisement"
+      },
+      "ApiError": {
+        "properties": {
+          "detail": {
+            "$ref": "#/components/schemas/ErrorDetail"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "detail"
+        ],
+        "title": "ApiError"
+      },
+      "ArchiveEventPage": {
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/ArchivedEvent"
+            },
+            "type": "array",
+            "title": "Items"
+          },
+          "next_after": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Next After"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "items",
+          "next_after"
+        ],
+        "title": "ArchiveEventPage"
+      },
+      "ArchivedControl": {
+        "properties": {
+          "archive_id": {
+            "type": "integer",
+            "title": "Archive Id"
+          },
+          "action_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Action Id"
+          },
+          "experiment_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Experiment Id"
+          },
+          "action": {
+            "type": "string",
+            "enum": [
+              "start",
+              "stop",
+              "kill",
+              "recover"
+            ],
+            "title": "Action"
+          },
+          "node_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Node Id"
+          },
+          "requested_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Requested At"
+          },
+          "completed_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Completed At"
+          },
+          "state": {
+            "type": "string",
+            "enum": [
+              "requested",
+              "succeeded",
+              "failed",
+              "interrupted"
+            ],
+            "title": "State"
+          },
+          "details": {
+            "additionalProperties": {
+              "$ref": "#/components/schemas/JsonValue"
+            },
+            "type": "object",
+            "title": "Details"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "archive_id",
+          "action_id",
+          "experiment_id",
+          "action",
+          "node_id",
+          "requested_at",
+          "completed_at",
+          "state",
+          "details"
+        ],
+        "title": "ArchivedControl"
+      },
+      "ArchivedDelivery": {
+        "properties": {
+          "archive_id": {
+            "type": "integer",
+            "title": "Archive Id"
+          },
+          "experiment_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Experiment Id"
+          },
+          "delivery": {
+            "$ref": "#/components/schemas/GuidanceDelivery"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "archive_id",
+          "experiment_id",
+          "delivery"
+        ],
+        "title": "ArchivedDelivery"
+      },
+      "ArchivedEvent": {
+        "properties": {
+          "archive_id": {
+            "type": "integer",
+            "title": "Archive Id"
+          },
+          "event_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Event Id"
+          },
+          "run_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Run Id"
+          },
+          "experiment_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Experiment Id"
+          },
+          "stream_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Stream Id"
+          },
+          "sequence": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Sequence"
+          },
+          "type": {
+            "type": "string",
+            "title": "Type"
+          },
+          "occurred_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Occurred At"
+          },
+          "recorded_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Recorded At"
+          },
+          "payload": {
+            "additionalProperties": {
+              "$ref": "#/components/schemas/JsonValue"
+            },
+            "type": "object",
+            "title": "Payload"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "archive_id",
+          "event_id",
+          "run_id",
+          "experiment_id",
+          "stream_id",
+          "sequence",
+          "type",
+          "occurred_at",
+          "recorded_at",
+          "payload"
+        ],
+        "title": "ArchivedEvent"
+      },
+      "Attempt": {
+        "properties": {
+          "number": {
+            "type": "integer",
+            "title": "Number"
+          },
+          "route": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Route"
+          },
+          "started_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Started At"
+          },
+          "duration_ms": {
+            "type": "number",
+            "title": "Duration Ms"
+          },
+          "route_calculation_ms": {
+            "type": "number",
+            "title": "Route Calculation Ms"
+          },
+          "outcome": {
+            "type": "string",
+            "title": "Outcome"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "number",
+          "route",
+          "started_at",
+          "duration_ms",
+          "route_calculation_ms",
+          "outcome"
+        ],
+        "title": "Attempt"
+      },
+      "BackendSnapshot": {
+        "properties": {
+          "schema_version": {
+            "type": "string",
+            "const": "1.0",
+            "title": "Schema Version",
+            "default": "1.0"
+          },
+          "stream_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Stream Id"
+          },
+          "sequence": {
+            "type": "integer",
+            "title": "Sequence"
+          },
+          "generated_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Generated At"
+          },
+          "scenarios": {
+            "items": {
+              "$ref": "#/components/schemas/ScenarioSnapshot"
+            },
+            "type": "array",
+            "title": "Scenarios"
+          },
+          "network": {
+            "$ref": "#/components/schemas/NetworkView"
+          },
+          "experiment": {
+            "$ref": "#/components/schemas/ExperimentView"
+          },
+          "deliveries": {
+            "items": {
+              "$ref": "#/components/schemas/GuidanceDelivery"
+            },
+            "type": "array",
+            "title": "Deliveries"
+          },
+          "human_evacuation_verified": {
+            "type": "boolean",
+            "const": false,
+            "title": "Human Evacuation Verified",
+            "default": false
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "stream_id",
+          "sequence",
+          "scenarios",
+          "network",
+          "experiment",
+          "deliveries"
+        ],
+        "title": "BackendSnapshot"
+      },
+      "Building": {
+        "properties": {
+          "metadata": {
+            "$ref": "#/components/schemas/Metadata"
+          },
+          "building_id": {
+            "type": "string",
+            "title": "Building Id"
+          },
+          "floors": {
+            "items": {
+              "type": "integer"
+            },
+            "type": "array",
+            "title": "Floors"
+          },
+          "nodes": {
+            "items": {
+              "$ref": "#/components/schemas/Place"
+            },
+            "type": "array",
+            "minItems": 1,
+            "title": "Nodes"
+          },
+          "edges": {
+            "items": {
+              "$ref": "#/components/schemas/WalkEdge"
+            },
+            "type": "array",
+            "minItems": 1,
+            "title": "Edges"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "metadata",
+          "building_id",
+          "floors",
+          "nodes",
+          "edges"
+        ],
+        "title": "Building"
+      },
+      "BuildingView": {
+        "properties": {
+          "building": {
+            "$ref": "#/components/schemas/Building"
+          },
+          "floors": {
+            "items": {
+              "$ref": "#/components/schemas/FloorView"
+            },
+            "type": "array",
+            "title": "Floors"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "building",
+          "floors"
+        ],
+        "title": "BuildingView"
+      },
+      "CommunicationEdge": {
+        "properties": {
+          "source": {
+            "type": "string",
+            "title": "Source"
+          },
+          "target": {
+            "type": "string",
+            "title": "Target"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "source",
+          "target"
+        ],
+        "title": "CommunicationEdge"
+      },
+      "CommunicationNode": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "minLength": 1,
+            "title": "Id"
+          },
+          "location_id": {
+            "type": "string",
+            "title": "Location Id"
+          },
+          "host": {
+            "type": "string",
+            "const": "127.0.0.1",
+            "title": "Host"
+          },
+          "port": {
+            "type": "integer",
+            "maximum": 65535.0,
+            "minimum": 1024.0,
+            "title": "Port"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "id",
+          "location_id",
+          "host",
+          "port"
+        ],
+        "title": "CommunicationNode"
+      },
+      "CommunicationTopology": {
+        "properties": {
+          "metadata": {
+            "$ref": "#/components/schemas/Metadata"
+          },
+          "topology_id": {
+            "type": "string",
+            "title": "Topology Id"
+          },
+          "directed": {
+            "type": "boolean",
+            "const": false,
+            "title": "Directed"
+          },
+          "nodes": {
+            "items": {
+              "$ref": "#/components/schemas/CommunicationNode"
+            },
+            "type": "array",
+            "maxItems": 6,
+            "minItems": 6,
+            "title": "Nodes"
+          },
+          "edges": {
+            "items": {
+              "$ref": "#/components/schemas/CommunicationEdge"
+            },
+            "type": "array",
+            "minItems": 1,
+            "title": "Edges"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "metadata",
+          "topology_id",
+          "directed",
+          "nodes",
+          "edges"
+        ],
+        "title": "CommunicationTopology"
+      },
+      "ComparisonPage": {
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/ExperimentComparison"
+            },
+            "type": "array",
+            "title": "Items"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "items"
+        ],
+        "title": "ComparisonPage"
+      },
+      "ControlHistoryPage": {
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/ArchivedControl"
+            },
+            "type": "array",
+            "title": "Items"
+          },
+          "next_cursor": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Next Cursor"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "items",
+          "next_cursor"
+        ],
+        "title": "ControlHistoryPage"
+      },
+      "DeliveryHistoryPage": {
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/ArchivedDelivery"
+            },
+            "type": "array",
+            "title": "Items"
+          },
+          "next_cursor": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Next Cursor"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "items",
+          "next_cursor"
+        ],
+        "title": "DeliveryHistoryPage"
+      },
+      "DeliveryObserved": {
+        "properties": {
+          "schema_version": {
+            "type": "string",
+            "const": "1.0",
+            "title": "Schema Version",
+            "default": "1.0"
+          },
+          "stream_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Stream Id"
+          },
+          "sequence": {
+            "type": "integer",
+            "minimum": 1.0,
+            "title": "Sequence"
+          },
+          "event_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Event Id"
+          },
+          "timestamp": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Timestamp"
+          },
+          "type": {
+            "type": "string",
+            "const": "guidance.result",
+            "title": "Type",
+            "default": "guidance.result"
+          },
+          "payload": {
+            "$ref": "#/components/schemas/GuidanceDelivery"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "stream_id",
+          "sequence",
+          "payload"
+        ],
+        "title": "DeliveryObserved"
+      },
+      "DeliveryResult": {
+        "properties": {
+          "type": {
+            "type": "string",
+            "const": "delivery_result",
+            "title": "Type",
+            "default": "delivery_result"
+          },
+          "message_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Message Id"
+          },
+          "source": {
+            "type": "string",
+            "title": "Source"
+          },
+          "destination": {
+            "type": "string",
+            "title": "Destination"
+          },
+          "success": {
+            "type": "boolean",
+            "title": "Success"
+          },
+          "ack": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Ack"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "error": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ErrorResponse"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "attempts": {
+            "items": {
+              "$ref": "#/components/schemas/Attempt"
+            },
+            "type": "array",
+            "title": "Attempts"
+          },
+          "retries": {
+            "type": "integer",
+            "title": "Retries"
+          },
+          "ttl_remaining": {
+            "type": "integer",
+            "title": "Ttl Remaining"
+          },
+          "elapsed_ms": {
+            "type": "number",
+            "title": "Elapsed Ms"
+          },
+          "route_calculation_ms": {
+            "type": "number",
+            "title": "Route Calculation Ms"
+          },
+          "recovery_after_first_failure_ms": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Recovery After First Failure Ms"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "message_id",
+          "source",
+          "destination",
+          "success",
+          "attempts",
+          "retries",
+          "ttl_remaining",
+          "elapsed_ms",
+          "route_calculation_ms"
+        ],
+        "title": "DeliveryResult"
+      },
+      "DisasterEvent": {
+        "properties": {
+          "event_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Event Id"
+          },
+          "timestamp": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Timestamp"
+          },
+          "scenario_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Scenario Id"
+          },
+          "scenario_revision": {
+            "type": "integer",
+            "minimum": 1.0,
+            "title": "Scenario Revision"
+          },
+          "event": {
+            "type": "string",
+            "enum": [
+              "scenario_created",
+              "hazards_changed",
+              "route_calculated",
+              "guidance_prepared",
+              "guidance_delivery_observed"
+            ],
+            "title": "Event"
+          },
+          "origin": {
+            "type": "string",
+            "enum": [
+              "simulation",
+              "computation",
+              "real_tcp_observation"
+            ],
+            "title": "Origin"
+          },
+          "details": {
+            "additionalProperties": {
+              "$ref": "#/components/schemas/JsonValue"
+            },
+            "type": "object",
+            "title": "Details"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "scenario_id",
+          "scenario_revision",
+          "event",
+          "origin"
+        ],
+        "title": "DisasterEvent"
+      },
+      "ErrorDetail": {
+        "properties": {
+          "code": {
+            "type": "string",
+            "title": "Code"
+          },
+          "message": {
+            "type": "string",
+            "title": "Message"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "code",
+          "message"
+        ],
+        "title": "ErrorDetail"
+      },
+      "ErrorResponse": {
+        "properties": {
+          "type": {
+            "type": "string",
+            "const": "error",
+            "title": "Type",
+            "default": "error"
+          },
+          "message_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Message Id"
+          },
+          "node": {
+            "type": "string",
+            "title": "Node"
+          },
+          "code": {
+            "type": "string",
+            "title": "Code"
+          },
+          "detail": {
+            "type": "string",
+            "title": "Detail"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "node",
+          "code",
+          "detail"
+        ],
+        "title": "ErrorResponse"
+      },
+      "EvacuationPlan": {
+        "properties": {
+          "scenario_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Scenario Id"
+          },
+          "building_id": {
+            "type": "string",
+            "title": "Building Id"
+          },
+          "scenario_revision": {
+            "type": "integer",
+            "minimum": 1.0,
+            "title": "Scenario Revision"
+          },
+          "route_version": {
+            "type": "integer",
+            "minimum": 1.0,
+            "title": "Route Version"
+          },
+          "start_location": {
+            "type": "string",
+            "title": "Start Location"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "route_found",
+              "no_route"
+            ],
+            "title": "Status"
+          },
+          "reason": {
+            "type": "string",
+            "enum": [
+              "minimum_distance",
+              "start_blocked",
+              "no_available_exit"
+            ],
+            "title": "Reason"
+          },
+          "path": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Path"
+          },
+          "exit_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Exit Id"
+          },
+          "distance_m": {
+            "anyOf": [
+              {
+                "type": "number",
+                "minimum": 0.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Distance M"
+          },
+          "candidates": {
+            "items": {
+              "$ref": "#/components/schemas/ExitCandidate"
+            },
+            "type": "array",
+            "title": "Candidates"
+          },
+          "calculated_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Calculated At"
+          },
+          "algorithm": {
+            "type": "string",
+            "const": "dijkstra",
+            "title": "Algorithm",
+            "default": "dijkstra"
+          },
+          "cost_unit": {
+            "type": "string",
+            "const": "m_assumed",
+            "title": "Cost Unit",
+            "default": "m_assumed"
+          },
+          "data_origin": {
+            "type": "string",
+            "const": "simulation",
+            "title": "Data Origin",
+            "default": "simulation"
+          },
+          "real_world_safety_verified": {
+            "type": "boolean",
+            "const": false,
+            "title": "Real World Safety Verified",
+            "default": false
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "scenario_id",
+          "building_id",
+          "scenario_revision",
+          "route_version",
+          "start_location",
+          "status",
+          "reason",
+          "candidates"
+        ],
+        "title": "EvacuationPlan"
+      },
+      "EventPage": {
+        "properties": {
+          "stream_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Stream Id"
+          },
+          "sequence": {
+            "type": "integer",
+            "title": "Sequence"
+          },
+          "reset_required": {
+            "type": "boolean",
+            "title": "Reset Required"
+          },
+          "events": {
+            "items": {
+              "oneOf": [
+                {
+                  "$ref": "#/components/schemas/ScenarioChanged"
+                },
+                {
+                  "$ref": "#/components/schemas/RouteChanged"
+                },
+                {
+                  "$ref": "#/components/schemas/NetworkChanged"
+                },
+                {
+                  "$ref": "#/components/schemas/FaultObserved"
+                },
+                {
+                  "$ref": "#/components/schemas/DeliveryObserved"
+                },
+                {
+                  "$ref": "#/components/schemas/ExperimentChanged"
+                }
+              ],
+              "discriminator": {
+                "propertyName": "type",
+                "mapping": {
+                  "experiment.changed": "#/components/schemas/ExperimentChanged",
+                  "guidance.result": "#/components/schemas/DeliveryObserved",
+                  "network.changed": "#/components/schemas/NetworkChanged",
+                  "network.event": "#/components/schemas/FaultObserved",
+                  "route.changed": "#/components/schemas/RouteChanged",
+                  "scenario.changed": "#/components/schemas/ScenarioChanged"
+                }
+              }
+            },
+            "type": "array",
+            "title": "Events"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "stream_id",
+          "sequence",
+          "reset_required",
+          "events"
+        ],
+        "title": "EventPage"
+      },
+      "ExitCandidate": {
+        "properties": {
+          "exit_id": {
+            "type": "string",
+            "title": "Exit Id"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "available",
+              "blocked",
+              "unreachable"
+            ],
+            "title": "Status"
+          },
+          "distance_m": {
+            "anyOf": [
+              {
+                "type": "number",
+                "minimum": 0.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Distance M"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "exit_id",
+          "status"
+        ],
+        "title": "ExitCandidate"
+      },
+      "ExperimentChanged": {
+        "properties": {
+          "schema_version": {
+            "type": "string",
+            "const": "1.0",
+            "title": "Schema Version",
+            "default": "1.0"
+          },
+          "stream_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Stream Id"
+          },
+          "sequence": {
+            "type": "integer",
+            "minimum": 1.0,
+            "title": "Sequence"
+          },
+          "event_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Event Id"
+          },
+          "timestamp": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Timestamp"
+          },
+          "type": {
+            "type": "string",
+            "const": "experiment.changed",
+            "title": "Type",
+            "default": "experiment.changed"
+          },
+          "payload": {
+            "$ref": "#/components/schemas/ExperimentView"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "stream_id",
+          "sequence",
+          "payload"
+        ],
+        "title": "ExperimentChanged"
+      },
+      "ExperimentComparison": {
+        "properties": {
+          "experiment_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Experiment Id"
+          },
+          "recording_complete": {
+            "type": "boolean",
+            "title": "Recording Complete"
+          },
+          "recorded_deliveries": {
+            "type": "integer",
+            "title": "Recorded Deliveries"
+          },
+          "ack_received": {
+            "type": "integer",
+            "title": "Ack Received"
+          },
+          "ack_rate": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Ack Rate"
+          },
+          "disposition_counts": {
+            "additionalProperties": {
+              "type": "integer"
+            },
+            "type": "object",
+            "title": "Disposition Counts"
+          },
+          "retries_total": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Retries Total"
+          },
+          "delivery_latency": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/MetricStats"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "route_calculation": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/MetricStats"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "delivery_recovery": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/MetricStats"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "heartbeat_detection": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/MetricStats"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "route_changes": {
+            "type": "integer",
+            "title": "Route Changes"
+          },
+          "scope": {
+            "type": "string",
+            "const": "recorded_observations",
+            "title": "Scope",
+            "default": "recorded_observations"
+          },
+          "heartbeat_scope": {
+            "type": "string",
+            "const": "after_experiment_ready",
+            "title": "Heartbeat Scope",
+            "default": "after_experiment_ready"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "experiment_id",
+          "recording_complete",
+          "recorded_deliveries",
+          "ack_received",
+          "ack_rate",
+          "disposition_counts",
+          "retries_total",
+          "delivery_latency",
+          "route_calculation",
+          "delivery_recovery",
+          "heartbeat_detection",
+          "route_changes"
+        ],
+        "title": "ExperimentComparison"
+      },
+      "ExperimentHistory": {
+        "properties": {
+          "archive_id": {
+            "type": "integer",
+            "title": "Archive Id"
+          },
+          "experiment_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Experiment Id"
+          },
+          "run_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Run Id"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          },
+          "started_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Started At"
+          },
+          "ended_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Ended At"
+          },
+          "interruption_detected_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Interruption Detected At"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "starting",
+              "running",
+              "stopping",
+              "stopped",
+              "failed",
+              "interrupted"
+            ],
+            "title": "Status"
+          },
+          "recording_complete": {
+            "type": "boolean",
+            "title": "Recording Complete"
+          },
+          "environment": {
+            "additionalProperties": {
+              "$ref": "#/components/schemas/JsonValue"
+            },
+            "type": "object",
+            "title": "Environment"
+          },
+          "conditions": {
+            "additionalProperties": {
+              "$ref": "#/components/schemas/JsonValue"
+            },
+            "type": "object",
+            "title": "Conditions"
+          },
+          "topology": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/CommunicationTopology"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "last_control_state": {
+            "$ref": "#/components/schemas/ExperimentView"
+          },
+          "topology_origin": {
+            "type": "string",
+            "const": "simulation",
+            "title": "Topology Origin",
+            "default": "simulation"
+          },
+          "transport": {
+            "type": "string",
+            "const": "real_tcp_loopback",
+            "title": "Transport",
+            "default": "real_tcp_loopback"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "archive_id",
+          "experiment_id",
+          "run_id",
+          "created_at",
+          "started_at",
+          "ended_at",
+          "interruption_detected_at",
+          "status",
+          "recording_complete",
+          "environment",
+          "conditions",
+          "topology",
+          "last_control_state"
+        ],
+        "title": "ExperimentHistory"
+      },
+      "ExperimentPage": {
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/ExperimentHistory"
+            },
+            "type": "array",
+            "title": "Items"
+          },
+          "next_cursor": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Next Cursor"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "items",
+          "next_cursor"
+        ],
+        "title": "ExperimentPage"
+      },
+      "ExperimentView": {
+        "properties": {
+          "enabled": {
+            "type": "boolean",
+            "title": "Enabled"
+          },
+          "experiment_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Experiment Id"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "stopped",
+              "starting",
+              "running",
+              "failed",
+              "stopping"
+            ],
+            "title": "Status",
+            "default": "stopped"
+          },
+          "nodes": {
+            "items": {
+              "$ref": "#/components/schemas/OwnedNode"
+            },
+            "type": "array",
+            "title": "Nodes"
+          },
+          "last_error": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Last Error"
+          },
+          "observation_origin": {
+            "type": "string",
+            "const": "real_process_control",
+            "title": "Observation Origin",
+            "default": "real_process_control"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "enabled"
+        ],
+        "title": "ExperimentView"
+      },
+      "FaultObserved": {
+        "properties": {
+          "schema_version": {
+            "type": "string",
+            "const": "1.0",
+            "title": "Schema Version",
+            "default": "1.0"
+          },
+          "stream_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Stream Id"
+          },
+          "sequence": {
+            "type": "integer",
+            "minimum": 1.0,
+            "title": "Sequence"
+          },
+          "event_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Event Id"
+          },
+          "timestamp": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Timestamp"
+          },
+          "type": {
+            "type": "string",
+            "const": "network.event",
+            "title": "Type",
+            "default": "network.event"
+          },
+          "payload": {
+            "$ref": "#/components/schemas/NetworkEvent"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "stream_id",
+          "sequence",
+          "payload"
+        ],
+        "title": "FaultObserved"
+      },
+      "FloorView": {
+        "properties": {
+          "floor": {
+            "type": "integer",
+            "title": "Floor"
+          },
+          "node_ids": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Node Ids"
+          },
+          "corridor_ids": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Corridor Ids"
+          },
+          "stair_ids": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Stair Ids"
+          },
+          "exit_ids": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Exit Ids"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "floor",
+          "node_ids",
+          "corridor_ids",
+          "stair_ids",
+          "exit_ids"
+        ],
+        "title": "FloorView"
+      },
+      "GuidanceDelivery": {
+        "properties": {
+          "schema_version": {
+            "type": "string",
+            "const": "1.0",
+            "title": "Schema Version",
+            "default": "1.0"
+          },
+          "message_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Message Id"
+          },
+          "scenario_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Scenario Id"
+          },
+          "scenario_revision": {
+            "type": "integer",
+            "title": "Scenario Revision"
+          },
+          "route_version": {
+            "type": "integer",
+            "title": "Route Version"
+          },
+          "audience_id": {
+            "type": "string",
+            "title": "Audience Id"
+          },
+          "source_node": {
+            "type": "string",
+            "title": "Source Node"
+          },
+          "destination_node": {
+            "type": "string",
+            "title": "Destination Node"
+          },
+          "observed_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Observed At"
+          },
+          "ack_received": {
+            "type": "boolean",
+            "title": "Ack Received"
+          },
+          "transport_result": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/DeliveryResult"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "transport_error": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Transport Error"
+          },
+          "application_receipt": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/GuidanceReceipt"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "receipt_query_error": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Receipt Query Error"
+          },
+          "disaster_origin": {
+            "type": "string",
+            "const": "simulation",
+            "title": "Disaster Origin",
+            "default": "simulation"
+          },
+          "observation_origin": {
+            "type": "string",
+            "const": "real_tcp_observation",
+            "title": "Observation Origin",
+            "default": "real_tcp_observation"
+          },
+          "human_evacuation_verified": {
+            "type": "boolean",
+            "const": false,
+            "title": "Human Evacuation Verified",
+            "default": false
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "message_id",
+          "scenario_id",
+          "scenario_revision",
+          "route_version",
+          "audience_id",
+          "source_node",
+          "destination_node",
+          "ack_received"
+        ],
+        "title": "GuidanceDelivery"
+      },
+      "GuidanceReceipt": {
+        "properties": {
+          "message_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Message Id"
+          },
+          "scenario_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Scenario Id"
+          },
+          "audience_id": {
+            "type": "string",
+            "title": "Audience Id"
+          },
+          "disposition": {
+            "type": "string",
+            "enum": [
+              "applied",
+              "stale",
+              "duplicate",
+              "version_conflict",
+              "publisher_conflict"
+            ],
+            "title": "Disposition"
+          },
+          "received_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Received At"
+          },
+          "received_scenario_revision": {
+            "type": "integer",
+            "title": "Received Scenario Revision"
+          },
+          "received_route_version": {
+            "type": "integer",
+            "title": "Received Route Version"
+          },
+          "latest_scenario_revision": {
+            "type": "integer",
+            "title": "Latest Scenario Revision"
+          },
+          "latest_route_version": {
+            "type": "integer",
+            "title": "Latest Route Version"
+          },
+          "latest_guidance_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Latest Guidance Id"
+          },
+          "content_digest": {
+            "type": "string",
+            "pattern": "^[0-9a-f]{64}$",
+            "title": "Content Digest"
+          },
+          "human_evacuation_verified": {
+            "type": "boolean",
+            "const": false,
+            "title": "Human Evacuation Verified",
+            "default": false
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "message_id",
+          "scenario_id",
+          "audience_id",
+          "disposition",
+          "received_scenario_revision",
+          "received_route_version",
+          "latest_scenario_revision",
+          "latest_route_version",
+          "latest_guidance_id",
+          "content_digest"
+        ],
+        "title": "GuidanceReceipt"
+      },
+      "GuidanceSend": {
+        "properties": {
+          "start_location": {
+            "type": "string",
+            "maxLength": 64,
+            "minLength": 1,
+            "title": "Start Location"
+          },
+          "source_node": {
+            "type": "string",
+            "maxLength": 64,
+            "minLength": 1,
+            "title": "Source Node"
+          },
+          "destination_node": {
+            "type": "string",
+            "maxLength": 64,
+            "minLength": 1,
+            "title": "Destination Node"
+          },
+          "expected_revision": {
+            "type": "integer",
+            "minimum": 1.0,
+            "title": "Expected Revision"
+          },
+          "ttl": {
+            "type": "integer",
+            "maximum": 64.0,
+            "minimum": 1.0,
+            "title": "Ttl",
+            "default": 16
+          },
+          "max_retries": {
+            "type": "integer",
+            "maximum": 6.0,
+            "minimum": 0.0,
+            "title": "Max Retries",
+            "default": 3
+          },
+          "timeout_seconds": {
+            "type": "number",
+            "maximum": 60.0,
+            "minimum": 1.0,
+            "title": "Timeout Seconds",
+            "default": 30
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "start_location",
+          "source_node",
+          "destination_node",
+          "expected_revision"
+        ],
+        "title": "GuidanceSend"
+      },
+      "HTTPValidationError": {
+        "properties": {
+          "detail": {
+            "items": {
+              "$ref": "#/components/schemas/ValidationError"
+            },
+            "type": "array",
+            "title": "Detail"
+          }
+        },
+        "type": "object",
+        "title": "HTTPValidationError"
+      },
+      "HazardReplace": {
+        "properties": {
+          "expected_revision": {
+            "type": "integer",
+            "minimum": 1.0,
+            "title": "Expected Revision"
+          },
+          "hazards": {
+            "$ref": "#/components/schemas/HazardUpdate"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "expected_revision",
+          "hazards"
+        ],
+        "title": "HazardReplace"
+      },
+      "HazardUpdate": {
+        "properties": {
+          "data_origin": {
+            "type": "string",
+            "const": "simulation",
+            "title": "Data Origin",
+            "default": "simulation"
+          },
+          "fire_locations": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Fire Locations"
+          },
+          "dangerous_nodes": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Dangerous Nodes"
+          },
+          "blocked_nodes": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Blocked Nodes"
+          },
+          "blocked_passages": {
+            "items": {
+              "$ref": "#/components/schemas/Passage"
+            },
+            "type": "array",
+            "title": "Blocked Passages"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "title": "HazardUpdate",
+        "description": "Full replacement of synthetic hazards, not a partial patch."
+      },
+      "HealthResponse": {
+        "properties": {
+          "status": {
+            "type": "string",
+            "const": "ok",
+            "title": "Status",
+            "default": "ok"
+          },
+          "service": {
+            "type": "string",
+            "const": "EXIT-LINK",
+            "title": "Service",
+            "default": "EXIT-LINK"
+          },
+          "stage": {
+            "type": "integer",
+            "const": 1,
+            "title": "Stage",
+            "default": 1
+          },
+          "data_mode": {
+            "type": "string",
+            "const": "simulation",
+            "title": "Data Mode",
+            "default": "simulation"
+          }
+        },
+        "type": "object",
+        "title": "HealthResponse"
+      },
+      "JsonValue": {},
+      "Metadata": {
+        "properties": {
+          "schema_version": {
+            "type": "string",
+            "const": "1.0",
+            "title": "Schema Version"
+          },
+          "data_origin": {
+            "type": "string",
+            "const": "simulation",
+            "title": "Data Origin"
+          },
+          "description": {
+            "type": "string",
+            "title": "Description"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "schema_version",
+          "data_origin",
+          "description"
+        ],
+        "title": "Metadata"
+      },
+      "MetricStats": {
+        "properties": {
+          "n": {
+            "type": "integer",
+            "minimum": 1.0,
+            "title": "N"
+          },
+          "minimum": {
+            "type": "number",
+            "title": "Minimum"
+          },
+          "maximum": {
+            "type": "number",
+            "title": "Maximum"
+          },
+          "mean": {
+            "type": "number",
+            "title": "Mean"
+          },
+          "median": {
+            "type": "number",
+            "title": "Median"
+          },
+          "unit": {
+            "type": "string",
+            "const": "ms",
+            "title": "Unit",
+            "default": "ms"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "n",
+          "minimum",
+          "maximum",
+          "mean",
+          "median"
+        ],
+        "title": "MetricStats"
+      },
+      "NeighborView": {
+        "properties": {
+          "node_id": {
+            "type": "string",
+            "title": "Node Id"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "unknown",
+              "up",
+              "suspect",
+              "down"
+            ],
+            "title": "Status"
+          },
+          "failures": {
+            "type": "integer",
+            "title": "Failures"
+          },
+          "successes": {
+            "type": "integer",
+            "title": "Successes"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "node_id",
+          "status",
+          "failures",
+          "successes"
+        ],
+        "title": "NeighborView"
+      },
+      "NetworkChanged": {
+        "properties": {
+          "schema_version": {
+            "type": "string",
+            "const": "1.0",
+            "title": "Schema Version",
+            "default": "1.0"
+          },
+          "stream_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Stream Id"
+          },
+          "sequence": {
+            "type": "integer",
+            "minimum": 1.0,
+            "title": "Sequence"
+          },
+          "event_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Event Id"
+          },
+          "timestamp": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Timestamp"
+          },
+          "type": {
+            "type": "string",
+            "const": "network.changed",
+            "title": "Type",
+            "default": "network.changed"
+          },
+          "payload": {
+            "$ref": "#/components/schemas/NetworkView"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "stream_id",
+          "sequence",
+          "payload"
+        ],
+        "title": "NetworkChanged"
+      },
+      "NetworkEvent": {
+        "properties": {
+          "timestamp": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Timestamp"
+          },
+          "event": {
+            "type": "string",
+            "title": "Event"
+          },
+          "node_id": {
+            "type": "string",
+            "title": "Node Id"
+          },
+          "transport": {
+            "type": "string",
+            "const": "tcp_loopback",
+            "title": "Transport",
+            "default": "tcp_loopback"
+          },
+          "observation_origin": {
+            "type": "string",
+            "const": "real_process",
+            "title": "Observation Origin",
+            "default": "real_process"
+          },
+          "details": {
+            "additionalProperties": {
+              "$ref": "#/components/schemas/JsonValue"
+            },
+            "type": "object",
+            "title": "Details"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "timestamp",
+          "event",
+          "node_id"
+        ],
+        "title": "NetworkEvent"
+      },
+      "NetworkNodeView": {
+        "properties": {
+          "node_id": {
+            "type": "string",
+            "title": "Node Id"
+          },
+          "observed_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Observed At"
+          },
+          "reachable": {
+            "type": "boolean",
+            "title": "Reachable"
+          },
+          "heartbeat_enabled": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Heartbeat Enabled"
+          },
+          "neighbors": {
+            "items": {
+              "$ref": "#/components/schemas/NeighborView"
+            },
+            "type": "array",
+            "title": "Neighbors"
+          },
+          "advertisements": {
+            "items": {
+              "$ref": "#/components/schemas/Advertisement"
+            },
+            "type": "array",
+            "title": "Advertisements"
+          },
+          "error": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Error"
+          },
+          "observation_origin": {
+            "type": "string",
+            "const": "real_tcp_observation",
+            "title": "Observation Origin",
+            "default": "real_tcp_observation"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "node_id",
+          "reachable"
+        ],
+        "title": "NetworkNodeView"
+      },
+      "NetworkView": {
+        "properties": {
+          "topology": {
+            "$ref": "#/components/schemas/CommunicationTopology"
+          },
+          "nodes": {
+            "items": {
+              "$ref": "#/components/schemas/NetworkNodeView"
+            },
+            "type": "array",
+            "title": "Nodes"
+          },
+          "observation_status": {
+            "type": "string",
+            "enum": [
+              "not_observed",
+              "observed",
+              "error"
+            ],
+            "title": "Observation Status",
+            "default": "not_observed"
+          },
+          "observed_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Observed At"
+          },
+          "monitor_error": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Monitor Error"
+          },
+          "topology_origin": {
+            "type": "string",
+            "const": "simulation",
+            "title": "Topology Origin",
+            "default": "simulation"
+          },
+          "transport": {
+            "type": "string",
+            "const": "real_tcp_loopback",
+            "title": "Transport",
+            "default": "real_tcp_loopback"
+          },
+          "configuration_source": {
+            "type": "string",
+            "enum": [
+              "project",
+              "owned_experiment"
+            ],
+            "title": "Configuration Source",
+            "default": "project"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "topology"
+        ],
+        "title": "NetworkView"
+      },
+      "OwnedNode": {
+        "properties": {
+          "node_id": {
+            "type": "string",
+            "title": "Node Id"
+          },
+          "pid": {
+            "type": "integer",
+            "title": "Pid"
+          },
+          "running": {
+            "type": "boolean",
+            "title": "Running"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "node_id",
+          "pid",
+          "running"
+        ],
+        "title": "OwnedNode"
+      },
+      "Passage": {
+        "properties": {
+          "source": {
+            "type": "string",
+            "title": "Source"
+          },
+          "target": {
+            "type": "string",
+            "title": "Target"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "source",
+          "target"
+        ],
+        "title": "Passage"
+      },
+      "Place": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "minLength": 1,
+            "title": "Id"
+          },
+          "floor": {
+            "type": "integer",
+            "maximum": 3.0,
+            "minimum": 1.0,
+            "title": "Floor"
+          },
+          "kind": {
+            "type": "string",
+            "enum": [
+              "corridor",
+              "stair",
+              "exit"
+            ],
+            "title": "Kind"
+          },
+          "label": {
+            "type": "string",
+            "title": "Label"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "id",
+          "floor",
+          "kind",
+          "label"
+        ],
+        "title": "Place"
+      },
+      "PlanRequest": {
+        "properties": {
+          "start_location": {
+            "type": "string",
+            "maxLength": 64,
+            "minLength": 1,
+            "title": "Start Location"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "start_location"
+        ],
+        "title": "PlanRequest"
+      },
+      "RouteChanged": {
+        "properties": {
+          "schema_version": {
+            "type": "string",
+            "const": "1.0",
+            "title": "Schema Version",
+            "default": "1.0"
+          },
+          "stream_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Stream Id"
+          },
+          "sequence": {
+            "type": "integer",
+            "minimum": 1.0,
+            "title": "Sequence"
+          },
+          "event_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Event Id"
+          },
+          "timestamp": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Timestamp"
+          },
+          "type": {
+            "type": "string",
+            "const": "route.changed",
+            "title": "Type",
+            "default": "route.changed"
+          },
+          "payload": {
+            "$ref": "#/components/schemas/EvacuationPlan"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "stream_id",
+          "sequence",
+          "payload"
+        ],
+        "title": "RouteChanged"
+      },
+      "ScenarioChanged": {
+        "properties": {
+          "schema_version": {
+            "type": "string",
+            "const": "1.0",
+            "title": "Schema Version",
+            "default": "1.0"
+          },
+          "stream_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Stream Id"
+          },
+          "sequence": {
+            "type": "integer",
+            "minimum": 1.0,
+            "title": "Sequence"
+          },
+          "event_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Event Id"
+          },
+          "timestamp": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Timestamp"
+          },
+          "type": {
+            "type": "string",
+            "const": "scenario.changed",
+            "title": "Type",
+            "default": "scenario.changed"
+          },
+          "payload": {
+            "$ref": "#/components/schemas/ScenarioSnapshot"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "stream_id",
+          "sequence",
+          "payload"
+        ],
+        "title": "ScenarioChanged"
+      },
+      "ScenarioCreate": {
+        "properties": {
+          "starts": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "maxItems": 14,
+            "minItems": 1,
+            "title": "Starts"
+          },
+          "hazards": {
+            "$ref": "#/components/schemas/HazardUpdate"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "starts"
+        ],
+        "title": "ScenarioCreate"
+      },
+      "ScenarioSnapshot": {
+        "properties": {
+          "schema_version": {
+            "type": "string",
+            "const": "1.0",
+            "title": "Schema Version",
+            "default": "1.0"
+          },
+          "state": {
+            "$ref": "#/components/schemas/ScenarioState"
+          },
+          "plans": {
+            "items": {
+              "$ref": "#/components/schemas/EvacuationPlan"
+            },
+            "type": "array",
+            "title": "Plans"
+          },
+          "events": {
+            "items": {
+              "$ref": "#/components/schemas/DisasterEvent"
+            },
+            "type": "array",
+            "title": "Events"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "state",
+          "plans",
+          "events"
+        ],
+        "title": "ScenarioSnapshot"
+      },
+      "ScenarioState": {
+        "properties": {
+          "schema_version": {
+            "type": "string",
+            "const": "1.0",
+            "title": "Schema Version",
+            "default": "1.0"
+          },
+          "scenario_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Scenario Id"
+          },
+          "building_id": {
+            "type": "string",
+            "title": "Building Id"
+          },
+          "revision": {
+            "type": "integer",
+            "minimum": 1.0,
+            "title": "Revision",
+            "default": 1
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          },
+          "updated_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Updated At"
+          },
+          "hazards": {
+            "$ref": "#/components/schemas/HazardUpdate"
+          },
+          "data_origin": {
+            "type": "string",
+            "const": "simulation",
+            "title": "Data Origin",
+            "default": "simulation"
+          },
+          "real_world_safety_verified": {
+            "type": "boolean",
+            "const": false,
+            "title": "Real World Safety Verified",
+            "default": false
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "building_id"
+        ],
+        "title": "ScenarioState"
+      },
+      "StorageStatus": {
+        "properties": {
+          "enabled": {
+            "type": "boolean",
+            "title": "Enabled"
+          },
+          "state": {
+            "type": "string",
+            "enum": [
+              "not_started",
+              "ready",
+              "degraded",
+              "disabled",
+              "closed"
+            ],
+            "title": "State"
+          },
+          "run_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Run Id"
+          },
+          "sqlite_version": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Sqlite Version"
+          },
+          "journal_mode": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Journal Mode"
+          },
+          "schema_version": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Schema Version"
+          },
+          "pending": {
+            "type": "integer",
+            "title": "Pending"
+          },
+          "failed": {
+            "type": "integer",
+            "title": "Failed"
+          },
+          "dropped": {
+            "type": "integer",
+            "title": "Dropped"
+          },
+          "last_error": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Last Error"
+          },
+          "last_error_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Last Error At"
+          },
+          "last_commit_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Last Commit At"
+          },
+          "recording_mode": {
+            "type": "string",
+            "const": "asynchronous",
+            "title": "Recording Mode",
+            "default": "asynchronous"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "enabled",
+          "state",
+          "run_id",
+          "pending",
+          "failed",
+          "dropped"
+        ],
+        "title": "StorageStatus"
+      },
+      "ValidationError": {
+        "properties": {
+          "loc": {
+            "items": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "integer"
+                }
+              ]
+            },
+            "type": "array",
+            "title": "Location"
+          },
+          "msg": {
+            "type": "string",
+            "title": "Message"
+          },
+          "type": {
+            "type": "string",
+            "title": "Error Type"
+          },
+          "input": {
+            "title": "Input"
+          },
+          "ctx": {
+            "type": "object",
+            "title": "Context"
+          }
+        },
+        "type": "object",
+        "required": [
+          "loc",
+          "msg",
+          "type"
+        ],
+        "title": "ValidationError"
+      },
+      "WalkEdge": {
+        "properties": {
+          "source": {
+            "type": "string",
+            "title": "Source"
+          },
+          "target": {
+            "type": "string",
+            "title": "Target"
+          },
+          "kind": {
+            "type": "string",
+            "enum": [
+              "corridor",
+              "stairs",
+              "exit_access"
+            ],
+            "title": "Kind"
+          },
+          "distance_m": {
+            "type": "number",
+            "exclusiveMinimum": 0.0,
+            "title": "Distance M"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "source",
+          "target",
+          "kind",
+          "distance_m"
+        ],
+        "title": "WalkEdge"
+      }
+    },
+    "securitySchemes": {
+      "APIKeyHeader": {
+        "type": "apiKey",
+        "in": "header",
+        "name": "X-Exit-Link-Token"
+      }
+    }
+  }
+}

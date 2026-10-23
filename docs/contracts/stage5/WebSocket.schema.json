@@ -1,0 +1,1694 @@
+{
+  "$defs": {
+    "Ack": {
+      "additionalProperties": false,
+      "properties": {
+        "type": {
+          "const": "ack",
+          "default": "ack",
+          "title": "Type",
+          "type": "string"
+        },
+        "message_id": {
+          "format": "uuid",
+          "title": "Message Id",
+          "type": "string"
+        },
+        "source": {
+          "title": "Source",
+          "type": "string"
+        },
+        "destination": {
+          "title": "Destination",
+          "type": "string"
+        },
+        "timestamp": {
+          "format": "date-time",
+          "title": "Timestamp",
+          "type": "string"
+        },
+        "route": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Route",
+          "type": "array"
+        },
+        "duplicate": {
+          "default": false,
+          "title": "Duplicate",
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "message_id",
+        "source",
+        "destination",
+        "route"
+      ],
+      "title": "Ack",
+      "type": "object"
+    },
+    "Advertisement": {
+      "additionalProperties": false,
+      "properties": {
+        "origin": {
+          "title": "Origin",
+          "type": "string"
+        },
+        "epoch": {
+          "exclusiveMinimum": 0,
+          "title": "Epoch",
+          "type": "integer"
+        },
+        "sequence": {
+          "minimum": 1,
+          "title": "Sequence",
+          "type": "integer"
+        },
+        "generated_at": {
+          "format": "date-time",
+          "title": "Generated At",
+          "type": "string"
+        },
+        "links": {
+          "additionalProperties": {
+            "enum": [
+              "unknown",
+              "up",
+              "suspect",
+              "down"
+            ],
+            "type": "string"
+          },
+          "title": "Links",
+          "type": "object"
+        }
+      },
+      "required": [
+        "origin",
+        "epoch",
+        "sequence",
+        "generated_at",
+        "links"
+      ],
+      "title": "Advertisement",
+      "type": "object"
+    },
+    "Attempt": {
+      "additionalProperties": false,
+      "properties": {
+        "number": {
+          "title": "Number",
+          "type": "integer"
+        },
+        "route": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Route",
+          "type": "array"
+        },
+        "started_at": {
+          "format": "date-time",
+          "title": "Started At",
+          "type": "string"
+        },
+        "duration_ms": {
+          "title": "Duration Ms",
+          "type": "number"
+        },
+        "route_calculation_ms": {
+          "title": "Route Calculation Ms",
+          "type": "number"
+        },
+        "outcome": {
+          "title": "Outcome",
+          "type": "string"
+        }
+      },
+      "required": [
+        "number",
+        "route",
+        "started_at",
+        "duration_ms",
+        "route_calculation_ms",
+        "outcome"
+      ],
+      "title": "Attempt",
+      "type": "object"
+    },
+    "BackendSnapshot": {
+      "additionalProperties": false,
+      "properties": {
+        "schema_version": {
+          "const": "1.0",
+          "default": "1.0",
+          "title": "Schema Version",
+          "type": "string"
+        },
+        "stream_id": {
+          "format": "uuid",
+          "title": "Stream Id",
+          "type": "string"
+        },
+        "sequence": {
+          "title": "Sequence",
+          "type": "integer"
+        },
+        "generated_at": {
+          "format": "date-time",
+          "title": "Generated At",
+          "type": "string"
+        },
+        "scenarios": {
+          "items": {
+            "$ref": "#/$defs/ScenarioSnapshot"
+          },
+          "title": "Scenarios",
+          "type": "array"
+        },
+        "network": {
+          "$ref": "#/$defs/NetworkView"
+        },
+        "experiment": {
+          "$ref": "#/$defs/ExperimentView"
+        },
+        "deliveries": {
+          "items": {
+            "$ref": "#/$defs/GuidanceDelivery"
+          },
+          "title": "Deliveries",
+          "type": "array"
+        },
+        "human_evacuation_verified": {
+          "const": false,
+          "default": false,
+          "title": "Human Evacuation Verified",
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "stream_id",
+        "sequence",
+        "scenarios",
+        "network",
+        "experiment",
+        "deliveries"
+      ],
+      "title": "BackendSnapshot",
+      "type": "object"
+    },
+    "CommunicationEdge": {
+      "additionalProperties": false,
+      "properties": {
+        "source": {
+          "title": "Source",
+          "type": "string"
+        },
+        "target": {
+          "title": "Target",
+          "type": "string"
+        }
+      },
+      "required": [
+        "source",
+        "target"
+      ],
+      "title": "CommunicationEdge",
+      "type": "object"
+    },
+    "CommunicationNode": {
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "minLength": 1,
+          "title": "Id",
+          "type": "string"
+        },
+        "location_id": {
+          "title": "Location Id",
+          "type": "string"
+        },
+        "host": {
+          "const": "127.0.0.1",
+          "title": "Host",
+          "type": "string"
+        },
+        "port": {
+          "maximum": 65535,
+          "minimum": 1024,
+          "title": "Port",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "id",
+        "location_id",
+        "host",
+        "port"
+      ],
+      "title": "CommunicationNode",
+      "type": "object"
+    },
+    "CommunicationTopology": {
+      "additionalProperties": false,
+      "properties": {
+        "metadata": {
+          "$ref": "#/$defs/Metadata"
+        },
+        "topology_id": {
+          "title": "Topology Id",
+          "type": "string"
+        },
+        "directed": {
+          "const": false,
+          "title": "Directed",
+          "type": "boolean"
+        },
+        "nodes": {
+          "items": {
+            "$ref": "#/$defs/CommunicationNode"
+          },
+          "maxItems": 6,
+          "minItems": 6,
+          "title": "Nodes",
+          "type": "array"
+        },
+        "edges": {
+          "items": {
+            "$ref": "#/$defs/CommunicationEdge"
+          },
+          "minItems": 1,
+          "title": "Edges",
+          "type": "array"
+        }
+      },
+      "required": [
+        "metadata",
+        "topology_id",
+        "directed",
+        "nodes",
+        "edges"
+      ],
+      "title": "CommunicationTopology",
+      "type": "object"
+    },
+    "DeliveryObserved": {
+      "additionalProperties": false,
+      "properties": {
+        "schema_version": {
+          "const": "1.0",
+          "default": "1.0",
+          "title": "Schema Version",
+          "type": "string"
+        },
+        "stream_id": {
+          "format": "uuid",
+          "title": "Stream Id",
+          "type": "string"
+        },
+        "sequence": {
+          "minimum": 1,
+          "title": "Sequence",
+          "type": "integer"
+        },
+        "event_id": {
+          "format": "uuid",
+          "title": "Event Id",
+          "type": "string"
+        },
+        "timestamp": {
+          "format": "date-time",
+          "title": "Timestamp",
+          "type": "string"
+        },
+        "type": {
+          "const": "guidance.result",
+          "default": "guidance.result",
+          "title": "Type",
+          "type": "string"
+        },
+        "payload": {
+          "$ref": "#/$defs/GuidanceDelivery"
+        }
+      },
+      "required": [
+        "stream_id",
+        "sequence",
+        "payload"
+      ],
+      "title": "DeliveryObserved",
+      "type": "object"
+    },
+    "DeliveryResult": {
+      "additionalProperties": false,
+      "properties": {
+        "type": {
+          "const": "delivery_result",
+          "default": "delivery_result",
+          "title": "Type",
+          "type": "string"
+        },
+        "message_id": {
+          "format": "uuid",
+          "title": "Message Id",
+          "type": "string"
+        },
+        "source": {
+          "title": "Source",
+          "type": "string"
+        },
+        "destination": {
+          "title": "Destination",
+          "type": "string"
+        },
+        "success": {
+          "title": "Success",
+          "type": "boolean"
+        },
+        "ack": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Ack"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "error": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/ErrorResponse"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "attempts": {
+          "items": {
+            "$ref": "#/$defs/Attempt"
+          },
+          "title": "Attempts",
+          "type": "array"
+        },
+        "retries": {
+          "title": "Retries",
+          "type": "integer"
+        },
+        "ttl_remaining": {
+          "title": "Ttl Remaining",
+          "type": "integer"
+        },
+        "elapsed_ms": {
+          "title": "Elapsed Ms",
+          "type": "number"
+        },
+        "route_calculation_ms": {
+          "title": "Route Calculation Ms",
+          "type": "number"
+        },
+        "recovery_after_first_failure_ms": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Recovery After First Failure Ms"
+        }
+      },
+      "required": [
+        "message_id",
+        "source",
+        "destination",
+        "success",
+        "attempts",
+        "retries",
+        "ttl_remaining",
+        "elapsed_ms",
+        "route_calculation_ms"
+      ],
+      "title": "DeliveryResult",
+      "type": "object"
+    },
+    "DisasterEvent": {
+      "additionalProperties": false,
+      "properties": {
+        "event_id": {
+          "format": "uuid",
+          "title": "Event Id",
+          "type": "string"
+        },
+        "timestamp": {
+          "format": "date-time",
+          "title": "Timestamp",
+          "type": "string"
+        },
+        "scenario_id": {
+          "format": "uuid",
+          "title": "Scenario Id",
+          "type": "string"
+        },
+        "scenario_revision": {
+          "minimum": 1,
+          "title": "Scenario Revision",
+          "type": "integer"
+        },
+        "event": {
+          "enum": [
+            "scenario_created",
+            "hazards_changed",
+            "route_calculated",
+            "guidance_prepared",
+            "guidance_delivery_observed"
+          ],
+          "title": "Event",
+          "type": "string"
+        },
+        "origin": {
+          "enum": [
+            "simulation",
+            "computation",
+            "real_tcp_observation"
+          ],
+          "title": "Origin",
+          "type": "string"
+        },
+        "details": {
+          "additionalProperties": {
+            "$ref": "#/$defs/JsonValue"
+          },
+          "title": "Details",
+          "type": "object"
+        }
+      },
+      "required": [
+        "scenario_id",
+        "scenario_revision",
+        "event",
+        "origin"
+      ],
+      "title": "DisasterEvent",
+      "type": "object"
+    },
+    "ErrorResponse": {
+      "additionalProperties": false,
+      "properties": {
+        "type": {
+          "const": "error",
+          "default": "error",
+          "title": "Type",
+          "type": "string"
+        },
+        "message_id": {
+          "anyOf": [
+            {
+              "format": "uuid",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Message Id"
+        },
+        "node": {
+          "title": "Node",
+          "type": "string"
+        },
+        "code": {
+          "title": "Code",
+          "type": "string"
+        },
+        "detail": {
+          "title": "Detail",
+          "type": "string"
+        }
+      },
+      "required": [
+        "node",
+        "code",
+        "detail"
+      ],
+      "title": "ErrorResponse",
+      "type": "object"
+    },
+    "EvacuationPlan": {
+      "additionalProperties": false,
+      "properties": {
+        "scenario_id": {
+          "format": "uuid",
+          "title": "Scenario Id",
+          "type": "string"
+        },
+        "building_id": {
+          "title": "Building Id",
+          "type": "string"
+        },
+        "scenario_revision": {
+          "minimum": 1,
+          "title": "Scenario Revision",
+          "type": "integer"
+        },
+        "route_version": {
+          "minimum": 1,
+          "title": "Route Version",
+          "type": "integer"
+        },
+        "start_location": {
+          "title": "Start Location",
+          "type": "string"
+        },
+        "status": {
+          "enum": [
+            "route_found",
+            "no_route"
+          ],
+          "title": "Status",
+          "type": "string"
+        },
+        "reason": {
+          "enum": [
+            "minimum_distance",
+            "start_blocked",
+            "no_available_exit"
+          ],
+          "title": "Reason",
+          "type": "string"
+        },
+        "path": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Path",
+          "type": "array"
+        },
+        "exit_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Exit Id"
+        },
+        "distance_m": {
+          "anyOf": [
+            {
+              "minimum": 0,
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Distance M"
+        },
+        "candidates": {
+          "items": {
+            "$ref": "#/$defs/ExitCandidate"
+          },
+          "title": "Candidates",
+          "type": "array"
+        },
+        "calculated_at": {
+          "format": "date-time",
+          "title": "Calculated At",
+          "type": "string"
+        },
+        "algorithm": {
+          "const": "dijkstra",
+          "default": "dijkstra",
+          "title": "Algorithm",
+          "type": "string"
+        },
+        "cost_unit": {
+          "const": "m_assumed",
+          "default": "m_assumed",
+          "title": "Cost Unit",
+          "type": "string"
+        },
+        "data_origin": {
+          "const": "simulation",
+          "default": "simulation",
+          "title": "Data Origin",
+          "type": "string"
+        },
+        "real_world_safety_verified": {
+          "const": false,
+          "default": false,
+          "title": "Real World Safety Verified",
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "scenario_id",
+        "building_id",
+        "scenario_revision",
+        "route_version",
+        "start_location",
+        "status",
+        "reason",
+        "candidates"
+      ],
+      "title": "EvacuationPlan",
+      "type": "object"
+    },
+    "ExitCandidate": {
+      "additionalProperties": false,
+      "properties": {
+        "exit_id": {
+          "title": "Exit Id",
+          "type": "string"
+        },
+        "status": {
+          "enum": [
+            "available",
+            "blocked",
+            "unreachable"
+          ],
+          "title": "Status",
+          "type": "string"
+        },
+        "distance_m": {
+          "anyOf": [
+            {
+              "minimum": 0,
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Distance M"
+        }
+      },
+      "required": [
+        "exit_id",
+        "status"
+      ],
+      "title": "ExitCandidate",
+      "type": "object"
+    },
+    "ExperimentChanged": {
+      "additionalProperties": false,
+      "properties": {
+        "schema_version": {
+          "const": "1.0",
+          "default": "1.0",
+          "title": "Schema Version",
+          "type": "string"
+        },
+        "stream_id": {
+          "format": "uuid",
+          "title": "Stream Id",
+          "type": "string"
+        },
+        "sequence": {
+          "minimum": 1,
+          "title": "Sequence",
+          "type": "integer"
+        },
+        "event_id": {
+          "format": "uuid",
+          "title": "Event Id",
+          "type": "string"
+        },
+        "timestamp": {
+          "format": "date-time",
+          "title": "Timestamp",
+          "type": "string"
+        },
+        "type": {
+          "const": "experiment.changed",
+          "default": "experiment.changed",
+          "title": "Type",
+          "type": "string"
+        },
+        "payload": {
+          "$ref": "#/$defs/ExperimentView"
+        }
+      },
+      "required": [
+        "stream_id",
+        "sequence",
+        "payload"
+      ],
+      "title": "ExperimentChanged",
+      "type": "object"
+    },
+    "ExperimentView": {
+      "additionalProperties": false,
+      "properties": {
+        "enabled": {
+          "title": "Enabled",
+          "type": "boolean"
+        },
+        "experiment_id": {
+          "anyOf": [
+            {
+              "format": "uuid",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Experiment Id"
+        },
+        "status": {
+          "default": "stopped",
+          "enum": [
+            "stopped",
+            "starting",
+            "running",
+            "failed",
+            "stopping"
+          ],
+          "title": "Status",
+          "type": "string"
+        },
+        "nodes": {
+          "items": {
+            "$ref": "#/$defs/OwnedNode"
+          },
+          "title": "Nodes",
+          "type": "array"
+        },
+        "last_error": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Last Error"
+        },
+        "observation_origin": {
+          "const": "real_process_control",
+          "default": "real_process_control",
+          "title": "Observation Origin",
+          "type": "string"
+        }
+      },
+      "required": [
+        "enabled"
+      ],
+      "title": "ExperimentView",
+      "type": "object"
+    },
+    "FaultObserved": {
+      "additionalProperties": false,
+      "properties": {
+        "schema_version": {
+          "const": "1.0",
+          "default": "1.0",
+          "title": "Schema Version",
+          "type": "string"
+        },
+        "stream_id": {
+          "format": "uuid",
+          "title": "Stream Id",
+          "type": "string"
+        },
+        "sequence": {
+          "minimum": 1,
+          "title": "Sequence",
+          "type": "integer"
+        },
+        "event_id": {
+          "format": "uuid",
+          "title": "Event Id",
+          "type": "string"
+        },
+        "timestamp": {
+          "format": "date-time",
+          "title": "Timestamp",
+          "type": "string"
+        },
+        "type": {
+          "const": "network.event",
+          "default": "network.event",
+          "title": "Type",
+          "type": "string"
+        },
+        "payload": {
+          "$ref": "#/$defs/NetworkEvent"
+        }
+      },
+      "required": [
+        "stream_id",
+        "sequence",
+        "payload"
+      ],
+      "title": "FaultObserved",
+      "type": "object"
+    },
+    "GuidanceDelivery": {
+      "additionalProperties": false,
+      "properties": {
+        "schema_version": {
+          "const": "1.0",
+          "default": "1.0",
+          "title": "Schema Version",
+          "type": "string"
+        },
+        "message_id": {
+          "format": "uuid",
+          "title": "Message Id",
+          "type": "string"
+        },
+        "scenario_id": {
+          "format": "uuid",
+          "title": "Scenario Id",
+          "type": "string"
+        },
+        "scenario_revision": {
+          "title": "Scenario Revision",
+          "type": "integer"
+        },
+        "route_version": {
+          "title": "Route Version",
+          "type": "integer"
+        },
+        "audience_id": {
+          "title": "Audience Id",
+          "type": "string"
+        },
+        "source_node": {
+          "title": "Source Node",
+          "type": "string"
+        },
+        "destination_node": {
+          "title": "Destination Node",
+          "type": "string"
+        },
+        "observed_at": {
+          "format": "date-time",
+          "title": "Observed At",
+          "type": "string"
+        },
+        "ack_received": {
+          "title": "Ack Received",
+          "type": "boolean"
+        },
+        "transport_result": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/DeliveryResult"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "transport_error": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Transport Error"
+        },
+        "application_receipt": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/GuidanceReceipt"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "receipt_query_error": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Receipt Query Error"
+        },
+        "disaster_origin": {
+          "const": "simulation",
+          "default": "simulation",
+          "title": "Disaster Origin",
+          "type": "string"
+        },
+        "observation_origin": {
+          "const": "real_tcp_observation",
+          "default": "real_tcp_observation",
+          "title": "Observation Origin",
+          "type": "string"
+        },
+        "human_evacuation_verified": {
+          "const": false,
+          "default": false,
+          "title": "Human Evacuation Verified",
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "message_id",
+        "scenario_id",
+        "scenario_revision",
+        "route_version",
+        "audience_id",
+        "source_node",
+        "destination_node",
+        "ack_received"
+      ],
+      "title": "GuidanceDelivery",
+      "type": "object"
+    },
+    "GuidanceReceipt": {
+      "additionalProperties": false,
+      "properties": {
+        "message_id": {
+          "format": "uuid",
+          "title": "Message Id",
+          "type": "string"
+        },
+        "scenario_id": {
+          "format": "uuid",
+          "title": "Scenario Id",
+          "type": "string"
+        },
+        "audience_id": {
+          "title": "Audience Id",
+          "type": "string"
+        },
+        "disposition": {
+          "enum": [
+            "applied",
+            "stale",
+            "duplicate",
+            "version_conflict",
+            "publisher_conflict"
+          ],
+          "title": "Disposition",
+          "type": "string"
+        },
+        "received_at": {
+          "format": "date-time",
+          "title": "Received At",
+          "type": "string"
+        },
+        "received_scenario_revision": {
+          "title": "Received Scenario Revision",
+          "type": "integer"
+        },
+        "received_route_version": {
+          "title": "Received Route Version",
+          "type": "integer"
+        },
+        "latest_scenario_revision": {
+          "title": "Latest Scenario Revision",
+          "type": "integer"
+        },
+        "latest_route_version": {
+          "title": "Latest Route Version",
+          "type": "integer"
+        },
+        "latest_guidance_id": {
+          "format": "uuid",
+          "title": "Latest Guidance Id",
+          "type": "string"
+        },
+        "content_digest": {
+          "pattern": "^[0-9a-f]{64}$",
+          "title": "Content Digest",
+          "type": "string"
+        },
+        "human_evacuation_verified": {
+          "const": false,
+          "default": false,
+          "title": "Human Evacuation Verified",
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "message_id",
+        "scenario_id",
+        "audience_id",
+        "disposition",
+        "received_scenario_revision",
+        "received_route_version",
+        "latest_scenario_revision",
+        "latest_route_version",
+        "latest_guidance_id",
+        "content_digest"
+      ],
+      "title": "GuidanceReceipt",
+      "type": "object"
+    },
+    "HazardUpdate": {
+      "additionalProperties": false,
+      "description": "Full replacement of synthetic hazards, not a partial patch.",
+      "properties": {
+        "data_origin": {
+          "const": "simulation",
+          "default": "simulation",
+          "title": "Data Origin",
+          "type": "string"
+        },
+        "fire_locations": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Fire Locations",
+          "type": "array"
+        },
+        "dangerous_nodes": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Dangerous Nodes",
+          "type": "array"
+        },
+        "blocked_nodes": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Blocked Nodes",
+          "type": "array"
+        },
+        "blocked_passages": {
+          "items": {
+            "$ref": "#/$defs/Passage"
+          },
+          "title": "Blocked Passages",
+          "type": "array"
+        }
+      },
+      "title": "HazardUpdate",
+      "type": "object"
+    },
+    "JsonValue": {},
+    "Metadata": {
+      "additionalProperties": false,
+      "properties": {
+        "schema_version": {
+          "const": "1.0",
+          "title": "Schema Version",
+          "type": "string"
+        },
+        "data_origin": {
+          "const": "simulation",
+          "title": "Data Origin",
+          "type": "string"
+        },
+        "description": {
+          "title": "Description",
+          "type": "string"
+        }
+      },
+      "required": [
+        "schema_version",
+        "data_origin",
+        "description"
+      ],
+      "title": "Metadata",
+      "type": "object"
+    },
+    "NeighborView": {
+      "additionalProperties": false,
+      "properties": {
+        "node_id": {
+          "title": "Node Id",
+          "type": "string"
+        },
+        "status": {
+          "enum": [
+            "unknown",
+            "up",
+            "suspect",
+            "down"
+          ],
+          "title": "Status",
+          "type": "string"
+        },
+        "failures": {
+          "title": "Failures",
+          "type": "integer"
+        },
+        "successes": {
+          "title": "Successes",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "node_id",
+        "status",
+        "failures",
+        "successes"
+      ],
+      "title": "NeighborView",
+      "type": "object"
+    },
+    "NetworkChanged": {
+      "additionalProperties": false,
+      "properties": {
+        "schema_version": {
+          "const": "1.0",
+          "default": "1.0",
+          "title": "Schema Version",
+          "type": "string"
+        },
+        "stream_id": {
+          "format": "uuid",
+          "title": "Stream Id",
+          "type": "string"
+        },
+        "sequence": {
+          "minimum": 1,
+          "title": "Sequence",
+          "type": "integer"
+        },
+        "event_id": {
+          "format": "uuid",
+          "title": "Event Id",
+          "type": "string"
+        },
+        "timestamp": {
+          "format": "date-time",
+          "title": "Timestamp",
+          "type": "string"
+        },
+        "type": {
+          "const": "network.changed",
+          "default": "network.changed",
+          "title": "Type",
+          "type": "string"
+        },
+        "payload": {
+          "$ref": "#/$defs/NetworkView"
+        }
+      },
+      "required": [
+        "stream_id",
+        "sequence",
+        "payload"
+      ],
+      "title": "NetworkChanged",
+      "type": "object"
+    },
+    "NetworkEvent": {
+      "additionalProperties": false,
+      "properties": {
+        "timestamp": {
+          "format": "date-time",
+          "title": "Timestamp",
+          "type": "string"
+        },
+        "event": {
+          "title": "Event",
+          "type": "string"
+        },
+        "node_id": {
+          "title": "Node Id",
+          "type": "string"
+        },
+        "transport": {
+          "const": "tcp_loopback",
+          "default": "tcp_loopback",
+          "title": "Transport",
+          "type": "string"
+        },
+        "observation_origin": {
+          "const": "real_process",
+          "default": "real_process",
+          "title": "Observation Origin",
+          "type": "string"
+        },
+        "details": {
+          "additionalProperties": {
+            "$ref": "#/$defs/JsonValue"
+          },
+          "title": "Details",
+          "type": "object"
+        }
+      },
+      "required": [
+        "timestamp",
+        "event",
+        "node_id"
+      ],
+      "title": "NetworkEvent",
+      "type": "object"
+    },
+    "NetworkNodeView": {
+      "additionalProperties": false,
+      "properties": {
+        "node_id": {
+          "title": "Node Id",
+          "type": "string"
+        },
+        "observed_at": {
+          "format": "date-time",
+          "title": "Observed At",
+          "type": "string"
+        },
+        "reachable": {
+          "title": "Reachable",
+          "type": "boolean"
+        },
+        "heartbeat_enabled": {
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Heartbeat Enabled"
+        },
+        "neighbors": {
+          "items": {
+            "$ref": "#/$defs/NeighborView"
+          },
+          "title": "Neighbors",
+          "type": "array"
+        },
+        "advertisements": {
+          "items": {
+            "$ref": "#/$defs/Advertisement"
+          },
+          "title": "Advertisements",
+          "type": "array"
+        },
+        "error": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Error"
+        },
+        "observation_origin": {
+          "const": "real_tcp_observation",
+          "default": "real_tcp_observation",
+          "title": "Observation Origin",
+          "type": "string"
+        }
+      },
+      "required": [
+        "node_id",
+        "reachable"
+      ],
+      "title": "NetworkNodeView",
+      "type": "object"
+    },
+    "NetworkView": {
+      "additionalProperties": false,
+      "properties": {
+        "topology": {
+          "$ref": "#/$defs/CommunicationTopology"
+        },
+        "nodes": {
+          "items": {
+            "$ref": "#/$defs/NetworkNodeView"
+          },
+          "title": "Nodes",
+          "type": "array"
+        },
+        "observation_status": {
+          "default": "not_observed",
+          "enum": [
+            "not_observed",
+            "observed",
+            "error"
+          ],
+          "title": "Observation Status",
+          "type": "string"
+        },
+        "observed_at": {
+          "anyOf": [
+            {
+              "format": "date-time",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Observed At"
+        },
+        "monitor_error": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Monitor Error"
+        },
+        "topology_origin": {
+          "const": "simulation",
+          "default": "simulation",
+          "title": "Topology Origin",
+          "type": "string"
+        },
+        "transport": {
+          "const": "real_tcp_loopback",
+          "default": "real_tcp_loopback",
+          "title": "Transport",
+          "type": "string"
+        },
+        "configuration_source": {
+          "default": "project",
+          "enum": [
+            "project",
+            "owned_experiment"
+          ],
+          "title": "Configuration Source",
+          "type": "string"
+        }
+      },
+      "required": [
+        "topology"
+      ],
+      "title": "NetworkView",
+      "type": "object"
+    },
+    "OwnedNode": {
+      "additionalProperties": false,
+      "properties": {
+        "node_id": {
+          "title": "Node Id",
+          "type": "string"
+        },
+        "pid": {
+          "title": "Pid",
+          "type": "integer"
+        },
+        "running": {
+          "title": "Running",
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "node_id",
+        "pid",
+        "running"
+      ],
+      "title": "OwnedNode",
+      "type": "object"
+    },
+    "Passage": {
+      "additionalProperties": false,
+      "properties": {
+        "source": {
+          "title": "Source",
+          "type": "string"
+        },
+        "target": {
+          "title": "Target",
+          "type": "string"
+        }
+      },
+      "required": [
+        "source",
+        "target"
+      ],
+      "title": "Passage",
+      "type": "object"
+    },
+    "RouteChanged": {
+      "additionalProperties": false,
+      "properties": {
+        "schema_version": {
+          "const": "1.0",
+          "default": "1.0",
+          "title": "Schema Version",
+          "type": "string"
+        },
+        "stream_id": {
+          "format": "uuid",
+          "title": "Stream Id",
+          "type": "string"
+        },
+        "sequence": {
+          "minimum": 1,
+          "title": "Sequence",
+          "type": "integer"
+        },
+        "event_id": {
+          "format": "uuid",
+          "title": "Event Id",
+          "type": "string"
+        },
+        "timestamp": {
+          "format": "date-time",
+          "title": "Timestamp",
+          "type": "string"
+        },
+        "type": {
+          "const": "route.changed",
+          "default": "route.changed",
+          "title": "Type",
+          "type": "string"
+        },
+        "payload": {
+          "$ref": "#/$defs/EvacuationPlan"
+        }
+      },
+      "required": [
+        "stream_id",
+        "sequence",
+        "payload"
+      ],
+      "title": "RouteChanged",
+      "type": "object"
+    },
+    "ScenarioChanged": {
+      "additionalProperties": false,
+      "properties": {
+        "schema_version": {
+          "const": "1.0",
+          "default": "1.0",
+          "title": "Schema Version",
+          "type": "string"
+        },
+        "stream_id": {
+          "format": "uuid",
+          "title": "Stream Id",
+          "type": "string"
+        },
+        "sequence": {
+          "minimum": 1,
+          "title": "Sequence",
+          "type": "integer"
+        },
+        "event_id": {
+          "format": "uuid",
+          "title": "Event Id",
+          "type": "string"
+        },
+        "timestamp": {
+          "format": "date-time",
+          "title": "Timestamp",
+          "type": "string"
+        },
+        "type": {
+          "const": "scenario.changed",
+          "default": "scenario.changed",
+          "title": "Type",
+          "type": "string"
+        },
+        "payload": {
+          "$ref": "#/$defs/ScenarioSnapshot"
+        }
+      },
+      "required": [
+        "stream_id",
+        "sequence",
+        "payload"
+      ],
+      "title": "ScenarioChanged",
+      "type": "object"
+    },
+    "ScenarioSnapshot": {
+      "additionalProperties": false,
+      "properties": {
+        "schema_version": {
+          "const": "1.0",
+          "default": "1.0",
+          "title": "Schema Version",
+          "type": "string"
+        },
+        "state": {
+          "$ref": "#/$defs/ScenarioState"
+        },
+        "plans": {
+          "items": {
+            "$ref": "#/$defs/EvacuationPlan"
+          },
+          "title": "Plans",
+          "type": "array"
+        },
+        "events": {
+          "items": {
+            "$ref": "#/$defs/DisasterEvent"
+          },
+          "title": "Events",
+          "type": "array"
+        }
+      },
+      "required": [
+        "state",
+        "plans",
+        "events"
+      ],
+      "title": "ScenarioSnapshot",
+      "type": "object"
+    },
+    "ScenarioState": {
+      "additionalProperties": false,
+      "properties": {
+        "schema_version": {
+          "const": "1.0",
+          "default": "1.0",
+          "title": "Schema Version",
+          "type": "string"
+        },
+        "scenario_id": {
+          "format": "uuid",
+          "title": "Scenario Id",
+          "type": "string"
+        },
+        "building_id": {
+          "title": "Building Id",
+          "type": "string"
+        },
+        "revision": {
+          "default": 1,
+          "minimum": 1,
+          "title": "Revision",
+          "type": "integer"
+        },
+        "created_at": {
+          "format": "date-time",
+          "title": "Created At",
+          "type": "string"
+        },
+        "updated_at": {
+          "format": "date-time",
+          "title": "Updated At",
+          "type": "string"
+        },
+        "hazards": {
+          "$ref": "#/$defs/HazardUpdate"
+        },
+        "data_origin": {
+          "const": "simulation",
+          "default": "simulation",
+          "title": "Data Origin",
+          "type": "string"
+        },
+        "real_world_safety_verified": {
+          "const": false,
+          "default": false,
+          "title": "Real World Safety Verified",
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "building_id"
+      ],
+      "title": "ScenarioState",
+      "type": "object"
+    },
+    "SnapshotFrame": {
+      "additionalProperties": false,
+      "properties": {
+        "type": {
+          "const": "snapshot",
+          "default": "snapshot",
+          "title": "Type",
+          "type": "string"
+        },
+        "payload": {
+          "$ref": "#/$defs/BackendSnapshot"
+        }
+      },
+      "required": [
+        "payload"
+      ],
+      "title": "SnapshotFrame",
+      "type": "object"
+    }
+  },
+  "discriminator": {
+    "mapping": {
+      "experiment.changed": "#/$defs/ExperimentChanged",
+      "guidance.result": "#/$defs/DeliveryObserved",
+      "network.changed": "#/$defs/NetworkChanged",
+      "network.event": "#/$defs/FaultObserved",
+      "route.changed": "#/$defs/RouteChanged",
+      "scenario.changed": "#/$defs/ScenarioChanged",
+      "snapshot": "#/$defs/SnapshotFrame"
+    },
+    "propertyName": "type"
+  },
+  "oneOf": [
+    {
+      "$ref": "#/$defs/SnapshotFrame"
+    },
+    {
+      "$ref": "#/$defs/ScenarioChanged"
+    },
+    {
+      "$ref": "#/$defs/RouteChanged"
+    },
+    {
+      "$ref": "#/$defs/NetworkChanged"
+    },
+    {
+      "$ref": "#/$defs/FaultObserved"
+    },
+    {
+      "$ref": "#/$defs/DeliveryObserved"
+    },
+    {
+      "$ref": "#/$defs/ExperimentChanged"
+    }
+  ]
+}
