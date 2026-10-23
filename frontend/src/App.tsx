@@ -51,18 +51,19 @@ export default function App() {
   const isReplay = location.pathname === '/replay';
   // Static public demos must not connect to visitors' localhost TCP/API service.
   const isPublicDemo = import.meta.env.VITE_DEMO_MODE === '1';
+  const hasPublicReadOnlyApi = isPublicDemo && import.meta.env.VITE_PUBLIC_READONLY_API === '1';
   useSpotlight();
   useEffect(() => {
-    if (!isReplay && !isPublicDemo) {
+    if (!isReplay && (!isPublicDemo || hasPublicReadOnlyApi)) {
       loadBuilding();
       eventStream.start();
     }
     const off = onTokenChange((has) => useApp.getState().setHasToken(has));
     return () => {
-      if (!isReplay && !isPublicDemo) eventStream.stop();
+      if (!isReplay && (!isPublicDemo || hasPublicReadOnlyApi)) eventStream.stop();
       off();
     };
-  }, [isReplay, isPublicDemo]);
+  }, [isReplay, isPublicDemo, hasPublicReadOnlyApi]);
 
   return (
     <div className="flex h-full min-h-[640px] flex-col">
