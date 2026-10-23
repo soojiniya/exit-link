@@ -49,18 +49,20 @@ function useSpotlight() {
 export default function App() {
   const location = useLocation();
   const isReplay = location.pathname === '/replay';
+  // Static public demos must not connect to visitors' localhost TCP/API service.
+  const isPublicDemo = import.meta.env.VITE_DEMO_MODE === '1';
   useSpotlight();
   useEffect(() => {
-    if (!isReplay) {
+    if (!isReplay && !isPublicDemo) {
       loadBuilding();
       eventStream.start();
     }
     const off = onTokenChange((has) => useApp.getState().setHasToken(has));
     return () => {
-      if (!isReplay) eventStream.stop();
+      if (!isReplay && !isPublicDemo) eventStream.stop();
       off();
     };
-  }, [isReplay]);
+  }, [isReplay, isPublicDemo]);
 
   return (
     <div className="flex h-full min-h-[640px] flex-col">
@@ -71,20 +73,20 @@ export default function App() {
           {/* 화면 전환: 경로가 바뀔 때만 짧은 페이드(같은 화면의 모드·쿼리 변경에는 다시 그리지 않음) */}
           <div key={location.pathname} className="page-enter h-full">
           <Routes>
-            <Route path="/" element={<Navigate to="/twin" replace />} />
+            <Route path="/" element={<Navigate to={isPublicDemo ? "/story" : "/twin"} replace />} />
             <Route path="/twin" element={<DigitalTwin />} />
             <Route path="/overview" element={<Lazy><Overview /></Lazy>} />
             <Route path="/network" element={<Lazy><NetworkMonitor /></Lazy>} />
-            <Route path="/lab" element={<SimulationLab />} />
+            <Route path="/lab" element={isPublicDemo ? <Navigate to="/story" replace /> : <SimulationLab />} />
             <Route path="/analytics" element={<Lazy><Analytics /></Lazy>} />
             <Route path="/replay" element={<Lazy><Replay /></Lazy>} />
             <Route path="/story" element={<Lazy><Story /></Lazy>} />
-            <Route path="*" element={<Navigate to="/twin" replace />} />
+            <Route path="*" element={<Navigate to={isPublicDemo ? "/story" : "/twin"} replace />} />
           </Routes>
           </div>
         </main>
       </div>
-      {!isReplay && <ControlDrawer />}
+      {!isReplay && !isPublicDemo && <ControlDrawer />}
     </div>
   );
 }
