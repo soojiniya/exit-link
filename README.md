@@ -1,5 +1,8 @@
 # EXIT-LINK
 
+🌐 **[Live Demo — EXIT-LINK 웹사이트](https://exit-link-mu.vercel.app/)**
+
+
 **Adaptive Emergency Communication Network** — 건물 내부 통신 노드 일부에 장애가 발생했을 때 대체 TCP 경로를 탐색하고, 대피 안내 메시지 전달과 ACK 수신을 시각적으로 확인하는 연구·시연 프로젝트입니다.
 
 > **연구용 프로토타입입니다.** 3층 건물 배치와 위험 시나리오는 가상 데이터이며, 통신 실험은 로컬 TCP 노드 기반입니다. 실제 화재·재난 현장이나 대피 안전성을 검증한 시스템이 아닙니다.
