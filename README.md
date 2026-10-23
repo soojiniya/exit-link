@@ -1,101 +1,95 @@
 # EXIT-LINK
 
-가상 3층 건물과 6개 독립 Python TCP 노드를 사용하는 재난 통신 연구·개발 프로젝트입니다.
-5단계 백엔드의 FastAPI REST API·WebSocket과 Claude가 구현한 Overview, Digital Twin, Network Monitor,
-Simulation Lab, Analytics 프론트엔드가 있습니다. 실제 센서는 연동하지 않으며 실제 화재 안전이나 사람의 대피 완료를 보장하지 않습니다.
+**Adaptive Emergency Communication Network** — 건물 내부 통신 노드 일부에 장애가 발생했을 때 대체 TCP 경로를 탐색하고, 대피 안내 메시지 전달과 ACK 수신을 시각적으로 확인하는 연구·시연 프로젝트입니다.
 
-[Windows 전체 검증·기술 안정성 보고서](docs/windows-validation-report.md),
-[프론트엔드 실행](frontend/README.md), [SQLite 구현·연동 가이드](docs/sqlite-persistence-guide.md),
-[SQLite 검증 보고서](docs/sqlite-persistence-report.md)를 참고합니다.
+> **연구용 프로토타입입니다.** 3층 건물 배치와 위험 시나리오는 가상 데이터이며, 통신 실험은 로컬 TCP 노드 기반입니다. 실제 화재·재난 현장이나 대피 안전성을 검증한 시스템이 아닙니다.
 
-공모전용 네트워크 비교는 별도 실행기의 [실험 설계](docs/network-comparison-design.md)와
-[Windows 시범 측정 보고서](docs/network-comparison-pilot-report.md)를 참고합니다.
-기존 회귀 검증 데이터를 성능 표본으로 합치지 않습니다.
-본 실험의 시간표·계획·잠금·저장 검증 상태와 PowerShell 절차는 [본 실험 준비 보고서](docs/main-study-readiness.md)에 정리했습니다.
+## 주요 기능
+
+| 화면 | 설명 |
+| --- | --- |
+| **Overview** | 시스템 소개, LIVE 상태와 저장된 사례·연구 결과를 구분해 표시 |
+| **Digital Twin** | Three.js 기반 3D 건물·층별 표시, LIVE / REPLAY / CINEMATIC |
+| **Network Monitor** | 6개 통신 노드와 링크, 전달 경로·장애·ACK 흐름 시각화 |
+| **Simulation Lab** | 실험 시작, 노드 장애·복구, 안내 전송을 위한 제어 화면 (기본 비활성화) |
+| **Analytics** | 저장된 비교 실험 결과, 전달 성공률과 측정 지표 |
+| **Replay** | 기록된 실험 사례의 타임라인과 사건별 재생 |
+| **Story** | 정상 통신 → 장애 → 우회 경로 → ACK → 연구 결과를 보여 주는 스크롤형 발표 화면 |
+
+**저장된 재생 사례**
+
+- `t012`: 정상 전달, ACK 3/3
+- `t010`: N2 장애 후 N3 경유 우회, ACK 3/3
+- `t000`: 복수 장애 조건에서 고정 경로 전달 실패, ACK 0/3
+
+재생 사례는 저장된 기록이며 실시간 측정이 아닙니다. 통계 비교는 별도의 저장된 실험 데이터에 근거하며, 사례 3개를 성능 표본으로 합산하지 않습니다.
+
+## 기술 구성
+
+- **Backend:** Python, FastAPI, WebSocket, 6개 독립 TCP 노드, Heartbeat 기반 장애 감지, 자동 경로 선택, ACK·재전송·TTL·중복 방지
+- **Frontend:** React 18, TypeScript, Vite, Tailwind CSS, Three.js / React Three Fiber, React Flow, Recharts
+- **검증:** pytest 및 프론트엔드 타입·레이아웃·상태·연구 데이터·재생 검증
+- **저장:** SQLite 기반 이력 기능 (선택 가능), 저장된 REPLAY JSON / 분석 JSON
+
+## 로컬 실행
+
+Windows PowerShell에서 저장소를 복제하고 **프로젝트 루트**에서 실행합니다. Python 3.12와 Node.js 20 이상을 권장합니다.
 
 ```powershell
-.\.venv\Scripts\python.exe scripts\verify_windows.py --restart-cycles 20
-```
-
-실행 중인 localhost API까지 좌표 대조하려면 `--api http://127.0.0.1:8000`을 추가합니다.
-브라우저 수동/자동화 점검은 보고서의 별도 절차를 사용합니다. 위 명령만으로 브라우저 조작까지 검증하지는 않습니다.
-
-- 가상 데이터: 건물·통신 토폴로지, 화재·위험 구역, 가정 거리 기반 Dijkstra 대피 경로
-- 실제 관측: 127.0.0.1 TCP 송수신, Heartbeat, 프로세스 종료·복구, ACK·재전송 결과
-- 기존 TCP 메시지·ACK 스키마와 /health 응답은 유지합니다. /health의 stage: 1은 호환용이며 전체 기능 단계나 노드 가용성을 뜻하지 않습니다.
-- [5단계 API 및 Claude 연동 가이드](docs/stage-5-api-guide.md)
-- [5단계 변경·검증 보고서](docs/stage-5-report.md)
-- [OpenAPI](docs/contracts/stage5/openapi.json), [WebSocket JSON Schema](docs/contracts/stage5/WebSocket.schema.json), [TypeScript 타입](docs/contracts/stage5/types.ts)
-- [기존 TCP·자동 경로 전환 CLI](docs/stage-3-guide.md), [TCP 진단](docs/tcp-diagnostics.md)
-
-## 설치 및 서버 실행
-
-Windows PowerShell / Python 3.12 기준입니다. 기존 가상환경을 그대로 사용합니다.
-새 환경에서는 가상환경을 만들고, 기존 환경에서도 잠금 의존성을 설치합니다. WAL 수정이 포함된
-SQLite 3.54.1을 내장하는 APSW 3.54.1.0이 추가되었습니다.
-
-```powershell
+git clone https://github.com/soojiniya/exit-link.git
+cd exit-link
 python -m venv .venv
 .\.venv\Scripts\python.exe -m pip install -r requirements.lock.txt
 .\.venv\Scripts\python.exe -m pip install --no-deps -e .
-.\.venv\Scripts\python.exe -m pip check
 ```
 
-프로젝트 루트에서 실행합니다. 토큰은 매번 생성하며 파일이나 Git에 저장할 필요가 없습니다.
+**터미널 1 — 백엔드 (읽기 전용, 실험 제어 비활성화)**
 
 ```powershell
-Set-Location 'C:\Users\User\Documents\Codex\2026-10-20\exit-link-fastapi-python-tcp-socket\outputs\exit-link'
-$env:EXIT_LINK_CONTROL_TOKEN = & .\.venv\Scripts\python.exe -c "import secrets; print(secrets.token_urlsafe(32))"
-$env:EXIT_LINK_ENABLE_EXPERIMENTS = '1'
+$env:EXIT_LINK_PERSISTENCE_ENABLED = '0'
+Remove-Item Env:EXIT_LINK_ENABLE_EXPERIMENTS, Env:EXIT_LINK_CONTROL_TOKEN -ErrorAction SilentlyContinue
 .\.venv\Scripts\python.exe -m uvicorn exit_link.main:app --host 127.0.0.1 --port 8000 --workers 1 --no-proxy-headers --ws-max-size 4096
 ```
 
-http://127.0.0.1:8000/docs 에서 API를 확인합니다. Swagger Authorize에 생성한 토큰을 입력합니다.
-토큰이 없으면 조회만 가능하고, 실험 활성화 환경변수가 없으면 프로세스 제어는 거부합니다.
-서버 시작만으로 노드 프로세스를 만들지 않습니다. POST /api/v1/experiment가 독립 노드 6개를 생성합니다.
-실험 제어는 이 서버가 소유한 프로세스만 대상으로 하며 PID·명령·실행 경로를 입력받지 않습니다.
---reload나 다중 worker를 사용하지 않습니다. 정상 종료 시 소유 노드를 정리합니다.
-강제 프로세스 종료·전원 차단의 자식 프로세스 정리까지 보장하지 않습니다.
-
-## 검증
+**터미널 2 — 프론트엔드**
 
 ```powershell
-.\.venv\Scripts\python.exe scripts\diagnose_tcp.py
-.\.venv\Scripts\python.exe scripts\verify_stage5.py
-$LASTEXITCODE
+cd frontend
+npm ci
+npm run dev
 ```
 
-검증기는 기존 187개와 SQLite 신규 테스트를 모두 실행하고 data/measured/stage5-tests-<실행ID>/에
-summary.json, pytest-results.txt와 실제 HTTP/WS/TCP 프로세스 증거를 저장합니다.
-localhost 사전 검사가 차단되면 pytest를 실행하지 않고 종료 코드 2로 기록합니다.
-실패·시간 초과는 성공으로 기록하지 않습니다. 최신 SQLite 검증 결과는 SQLite 검증 보고서를 확인합니다.
-일반 PowerShell에서는 직접 .\.venv\Scripts\python.exe -m pytest -v 로도 실행할 수 있습니다.
+브라우저에서 **http://127.0.0.1:5173** 에 접속합니다. 백엔드를 실행하지 않으면 LIVE 데이터·3D 레이아웃 검증 등 일부 기능이 제한될 수 있으나, 저장된 REPLAY·STORY·연구 결과 데이터는 별도로 제공됩니다.
 
-## 상태와 데이터 수명
-
-시나리오·전송 결과 목록·WebSocket 이벤트는 단일 백엔드 프로세스 메모리에 있습니다.
-재시작하면 시나리오 목록이 초기화되고 stream_id가 바뀝니다.
-실시간 결과·이벤트 보관 창은 각각 최근 512개입니다. 별도로 SQLite WAL에 실험·제어·시나리오·안내·장애 이벤트를
-비동기 보관하며 `/api/v1/history`에서 재시작 후에도 조회합니다. 기본 DB는 `data/measured/stage5/history.sqlite3`입니다.
-`EXIT_LINK_DATABASE_PATH`로 로컬 파일 경로를 지정하거나 `EXIT_LINK_PERSISTENCE_ENABLED=0`으로 저장을 끌 수 있습니다.
-저장 오류는 이력 API 503과 `/api/v1/history/status`로 드러내며 기존 TCP 및 실시간 동작을 유지합니다.
-강제 종료 전 큐에 남은 미커밋 기록은 유실될 수 있습니다. 과거 이력으로 현재 노드·시나리오를 자동 복원하지 않습니다.
-TCP 수신 노드의 안내 버전 가드는 기존 4단계 파일 저장을 재사용합니다.
-실험별 실제 프로세스 로그는 data/measured/stage5/에 보존됩니다.
-관측하지 않은 노드를 정상으로 채우거나 임의 성능 수치를 만들지 않습니다.
-
-src/exit_link/topology, routing, communication, fault_detection, evacuation은 기존 기능이며
-api/contracts.py, security.py, events.py, runtime.py, dashboard.py가 5단계 연동 계층입니다.
-4단계 JSON Schema 10개는 docs/schemas/stage4/에 유지합니다.
-API 스키마와 타입은 다음 명령으로 다시 생성합니다.
+### 검증 및 빌드
 
 ```powershell
-.\.venv\Scripts\python.exe scripts\export_stage5_contracts.py
+cd frontend
+npm run verify
+npm run verify:study
+npm run verify:replay
+npm run build
 ```
 
-.env*, 인증정보, .venv, 로컬 IDE 설정, 측정 로그는 .gitignore로 제외합니다.
-커밋·원격 업로드는 수행하지 않았습니다.
+백엔드 테스트 및 운영 관련 상세 절차는 [프론트엔드 가이드](frontend/README.md), [Windows 검증 보고서](docs/windows-validation-report.md), [5단계 API 가이드](docs/stage-5-api-guide.md)에 있습니다.
 
-시간표 지연을 개선한 별도 `aligned_v3` 실행기의 동작 원리, 내구성 정책, 검증 결과 및
-2셀 Windows 예행 명령은 [aligned-v3 준비 보고서](docs/aligned-v3-readiness.md)에 정리했습니다.
-기존 `m-8ce4fd46`의 v2 자료는 보존하며 새 결과와 합산하지 않습니다.
+## 저장된 비교 실험 해석
+
+2026-10-21에 수집한 `aligned_v3` 데이터에서 **Fixed 210/714 (29.4%)**, **EXIT-LINK 487/714 (68.2%)**로 기록되어, 이 실험 조건에서 전달 성공률 차이는 **+38.8%p**입니다. 이는 로컬 실험 결과일 뿐 실제 재난 환경의 성공률이나 대피 완료율을 의미하지 않습니다. 분석 기준·제외 조건·제한 사항은 [연구 준비 문서](docs/aligned-v3-readiness.md)와 프론트엔드 Analytics 화면을 확인하세요.
+
+## 공개 웹 데모 관련 안내
+
+이 저장소의 **GitHub 공개 여부와 웹 데모 배포 여부는 별개**입니다. 정적 호스팅은 저장된 REPLAY / STORY / Analytics 시연에 적합하지만, 로컬의 FastAPI·TCP 노드 실험을 자동으로 호스팅하지 않습니다. 공개 배포 시 LIVE / Simulation Lab은 백엔드 미연결 또는 읽기 전용으로 표시해야 하며, 실험 제어용 토큰을 웹 빌드에 포함해서는 안 됩니다.
+
+## 프로젝트 구조
+
+```text
+frontend/       React · 3D · 네트워크 시각화 · 저장된 사례
+src/exit_link/  FastAPI · TCP · 장애 감지 · 통신·대피 경로
+scripts/        실험·검증·분석 실행기
+tests/          백엔드 테스트
+docs/           API 스키마·실험 설계·검증 보고서
+data/           공개 가능한 설명 및 샘플
+```
+
+**관련 문서:** [Frontend](frontend/README.md) · [Network Comparison Design](docs/network-comparison-design.md) · [Stage 5 Report](docs/stage-5-report.md) · [SQLite Guide](docs/sqlite-persistence-guide.md)
