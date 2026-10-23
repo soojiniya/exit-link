@@ -78,7 +78,7 @@ export default function App() {
             <Route path="/twin" element={<DigitalTwin />} />
             <Route path="/overview" element={<Lazy><Overview /></Lazy>} />
             <Route path="/network" element={<Lazy><NetworkMonitor /></Lazy>} />
-            <Route path="/lab" element={isPublicDemo ? <Navigate to="/story" replace /> : <SimulationLab />} />
+            <Route path="/lab" element={<SimulationLab />} />
             <Route path="/analytics" element={<Lazy><Analytics /></Lazy>} />
             <Route path="/replay" element={<Lazy><Replay /></Lazy>} />
             <Route path="/story" element={<Lazy><Story /></Lazy>} />
