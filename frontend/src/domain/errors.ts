@@ -1,6 +1,7 @@
 /** 백엔드 오류 코드(docs/stage-5-api-guide.md, api/runtime.py) → 운영자용 설명 */
 const HINT: Record<string, string> = {
   token_missing: '제어 토큰이 없습니다. 상단의 읽기 전용 버튼에서 토큰을 입력하세요.',
+  public_read_only: '공개 데모는 읽기 전용입니다. 실험 제어는 로컬 실험 환경에서만 가능하며, 저장된 실험 기록은 REPLAY에서 확인할 수 있습니다.',
   write_unauthorized: '토큰이 없거나 서버 토큰과 다릅니다(403).',
   local_only: '로컬 접속(127.0.0.1/localhost, 허용 Origin)만 제어할 수 있습니다(403).',
   experiments_disabled: '서버를 EXIT_LINK_ENABLE_EXPERIMENTS=1로 실행해야 실험을 제어할 수 있습니다(403).',

@@ -209,6 +209,38 @@ export function DisabledNotice({ env }: { env: Env }) {
   );
 }
 
+/** 공개 데모: 토큰 입력·쓰기 제어를 표시하지 않고 저장된 기록(REPLAY)으로 안내합니다. 기존 안내 박스와 같은 스타일입니다. */
+export function PublicReadOnlyNotice({ compact = false }: { compact?: boolean }) {
+  if (compact) {
+    return (
+      <p className="rounded-xl border border-white/[0.08] bg-white/[0.025] px-4 py-3 text-[12.5px] leading-relaxed text-ink-3" data-testid="lab-public-readonly-card">
+        공개 데모에서는 이 제어를 사용할 수 없습니다(읽기 전용). 실제 TCP 노드 실행·장애 주입·안내 전송은 로컬 실험 환경에서만 수행합니다.
+      </p>
+    );
+  }
+  return (
+    <div className="flex flex-col gap-4 rounded-2xl border border-white/[0.08] bg-white/[0.025] px-5 py-4 md:flex-row md:items-center md:justify-between" data-testid="lab-public-readonly">
+      <div className="flex items-start gap-3">
+        <Info size={17} className="mt-0.5 shrink-0 text-ink-3" />
+        <div>
+          <div className="text-[14px] text-ink">공개 데모는 읽기 전용입니다. 저장된 실제 TCP 실험 기록은 REPLAY에서 확인할 수 있습니다.</div>
+          <div className="mt-0.5 text-[12.5px] text-ink-3">
+            이 화면은 제어 토큰을 받지 않으며 시나리오 생성·위험 구역 변경·장애 주입·안내 전송 요청을 보내지 않습니다. 실험 제어는 로컬 실험 환경에서만 가능합니다.
+          </div>
+        </div>
+      </div>
+      <div className="flex shrink-0 gap-2">
+        <button type="button" onClick={() => document.getElementById('lab-sec-recorded')?.scrollIntoView({ behavior: 'smooth', block: 'start' })} className="lift inline-flex h-9 items-center gap-1.5 rounded-full border border-[#A9C7FF]/35 bg-[#A9C7FF]/[0.08] px-3.5 text-[12.5px] text-[#DCE8FF]">
+          <Archive size={13} /> 저장된 실험 기록
+        </button>
+        <Link to="/twin?mode=replay&case=t010" className="lift inline-flex h-9 items-center gap-1.5 rounded-full border border-white/12 bg-white/[0.04] px-3.5 text-[12.5px] text-ink">
+          REPLAY <ArrowRight size={13} />
+        </Link>
+      </div>
+    </div>
+  );
+}
+
 // ── 구역 카드 ───────────────────────────────────────────────
 export function StepCard({ id, no, title, desc, right, children, className }: { id?: string; no?: string; title: string; desc?: string; right?: ReactNode; children: ReactNode; className?: string }) {
   return (

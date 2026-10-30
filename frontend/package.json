@@ -10,10 +10,11 @@
     "preview": "vite preview",
     "verify:layout": "tsx scripts/verify-layout.ts",
     "verify:state": "tsx scripts/verify-state.ts",
+    "verify:public": "tsx scripts/verify-public.ts",
     "import:study": "tsx scripts/import-study.ts",
     "verify:study": "tsx scripts/verify-study.ts",
     "verify:replay": "tsx scripts/verify-replay.ts",
-    "verify": "npm run typecheck && npm run verify:layout && npm run verify:state"
+    "verify": "npm run typecheck && npm run verify:layout && npm run verify:state && npm run verify:public"
   },
   "dependencies": {
     "@fontsource/jetbrains-mono": "^5.1.0",

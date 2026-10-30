@@ -24,6 +24,38 @@ from exit_link.topology.loader import load_building, load_communication
 from exit_link.storage.archive import Archive, utc
 
 
+def describe(exc):
+    """Readable error text that is never empty (e.g. TimeoutError() has no message)."""
+    message = str(exc)
+    return type(exc).__name__ + (": " + message if message else "")
+
+
+async def settle(task):
+    """Wait until a cleanup task has finished, absorbing repeated cancellation.
+
+    The task's own outcome is read by the caller with task.result(). Returns True when
+    the caller was cancelled meanwhile, so it can re-raise after recording the outcome.
+    """
+    cancelled = False
+    while not task.done():
+        try:
+            await asyncio.wait({task})
+        except asyncio.CancelledError:
+            cancelled = True
+    return cancelled
+
+
+def owned_processes_remain(cluster):
+    """True while any owned process may still be running (unknown counts as running)."""
+    alive = getattr(cluster, "alive_nodes", None)
+    if callable(alive):
+        return bool(alive())
+    processes = getattr(cluster, "processes", None)
+    if processes is None:
+        return True
+    return any(process.poll() is None for process in processes.values())
+
+
 class Backend:
     def __init__(self, settings: ApiSettings):
         self.settings = settings
@@ -40,6 +72,9 @@ class Backend:
         self.inflight = 0
         self.archive = Archive(settings.database_path or settings.artifact_directory / "history.sqlite3", settings.persistence_enabled)
         self.archive_contexts, self.message_contexts = {}, {}
+        # Cleanup failures of the currently owned cluster; a later successful retry
+        # must not report the experiment as cleanly stopped.
+        self.cleanup_errors = []
 
     def archive_context(self, experiment_id=None):
         experiment_id = str(experiment_id) if experiment_id else (str(self.experiment.experiment_id) if self.cluster else None)
@@ -206,28 +241,55 @@ class Backend:
             experiment_id = uuid4()
             self.experiment_changed(experiment_id=experiment_id, status="starting", last_error=None)
             action = self.control_intent("start")
+            starter = None
             try:
                 self.cluster = LocalCluster(self.settings.artifact_directory / str(experiment_id), relay_delay=0)
+                self.cleanup_errors = []
                 self.reset_network()
                 self.archive.record("config", {}, self.archive_context(experiment_id))
-                await asyncio.to_thread(self.cluster.start_all)
+                # The worker thread cannot be cancelled. Keep a handle to it so that a
+                # cancelled request still joins it before any cleanup touches processes.
+                starter = asyncio.ensure_future(asyncio.to_thread(self.cluster.start_all))
+                await asyncio.shield(starter)
                 await self.cluster.wait_ready()
-            except Exception as exc:
-                error = type(exc).__name__ + ": " + str(exc)
-                if self.cluster:
-                    try:
-                        await self.cluster.close()
-                    except Exception as cleanup:
-                        error += "; cleanup: " + str(cleanup)
-                self.cluster = None
-                self.reset_network()
-                self.experiment_changed(status="failed", last_error=error)
-                self.control_completed(action, error=error)
-                fail("experiment_start_failed", error, 503)
+            except BaseException as exc:
+                cancelled = isinstance(exc, asyncio.CancelledError)
+                error = "CancelledError: experiment start was cancelled" if cancelled else describe(exc)
+                # Cleanup runs to completion under control_lock even if cancelled again.
+                cleanup = asyncio.ensure_future(self.abort_start(starter, action, error))
+                cancelled = await settle(cleanup) or cancelled
+                if isinstance(exc, (asyncio.CancelledError, KeyboardInterrupt, SystemExit)):
+                    raise
+                if cancelled:
+                    raise asyncio.CancelledError()
+                fail("experiment_start_failed", cleanup.result(), 503)
             self.experiment_changed(status="running")
             self.control_completed(action)
             await self.refresh_network()
             return self.experiment_view()
+
+    async def abort_start(self, starter, action, error):
+        """Join the start thread, then release every process it may have created."""
+        if starter is not None:
+            with suppress(BaseException):
+                await starter  # the thread's own failure is already described by `error`
+        owned = False
+        if self.cluster:
+            try:
+                await self.cluster.close()
+            except Exception as cleanup:
+                error += "; cleanup: " + describe(cleanup)
+                # Keep ownership only while a process may still run; stop_experiment retries.
+                owned = owned_processes_remain(self.cluster)
+                if owned:
+                    self.__dict__.setdefault("cleanup_errors", []).append(error)
+        if not owned:
+            self.cluster = None
+            self.cleanup_errors = []
+            self.reset_network()
+        self.experiment_changed(status="failed", last_error=error)
+        self.control_completed(action, error=error)
+        return error
 
     async def control_node(self, node_id, recover=False):
         self.require_experiment()
@@ -258,9 +320,10 @@ class Backend:
                 else:
                     action["details"]["fault"] = await asyncio.to_thread(self.cluster.kill, node_id)
             except Exception as exc:
-                self.control_completed(action, error=str(exc), old_pid=process.pid)
-                self.experiment_changed(last_error=str(exc))
-                fail("node_control_failed", str(exc), 503)
+                message = str(exc) or type(exc).__name__  # an empty message is still a failure
+                self.control_completed(action, error=message, old_pid=process.pid)
+                self.experiment_changed(last_error=message)
+                fail("node_control_failed", message, 503)
             self.experiment_changed(last_error=None)
             self.control_completed(action, old_pid=process.pid, current_pid=self.cluster.processes[node_id].pid)
             await self.refresh_network()
@@ -276,18 +339,39 @@ class Backend:
                 return self.experiment_view()
             self.experiment_changed(status="stopping")
             action = self.control_intent("stop")
-            error = None
+            error, owned = None, False
+            cluster = self.cluster
+            # A cancelled stop request must not abandon a half-finished cleanup.
+            closing = asyncio.ensure_future(cluster.close())
+            cancelled = await settle(closing)
+            earlier = self.__dict__.setdefault("cleanup_errors", [])
             try:
-                await self.cluster.close()
-                self.collect_logs(self.cluster)
+                try:
+                    closing.result()
+                except Exception:
+                    # Keep the owner only while a process may still be running, so that no
+                    # new experiment starts beside it and a later stop can retry cleanup.
+                    owned = owned_processes_remain(cluster)
+                    raise
+                self.collect_logs(cluster)
+                if earlier:
+                    # Every process is confirmed gone now, but an earlier attempt failed:
+                    # report the experiment's cleanup as failed, never as a clean stop.
+                    error = "Cleanup completed on retry after an earlier failure: " + earlier[-1]
             except Exception as exc:
-                error = str(exc)
+                error = str(exc) or type(exc).__name__
             finally:
-                self.cluster = None
-                self.reset_network()
-                self.experiment_changed(status="failed" if error else "stopped", last_error=error)
+                if owned:
+                    earlier.append(error)
+                else:
+                    self.cluster = None
+                    self.cleanup_errors = []
+                    self.reset_network()
+                self.experiment_changed(status="failed" if error is not None else "stopped", last_error=error)
                 self.control_completed(action, error=error)
-            if error:
+            if cancelled:
+                raise asyncio.CancelledError()
+            if error is not None:
                 fail("experiment_cleanup_failed", error, 503)
             return self.experiment_view()
 

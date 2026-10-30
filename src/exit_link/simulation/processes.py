@@ -15,6 +15,19 @@ from exit_link.topology.models import CommunicationTopology
 from exit_link.simulation.diagnostics import port_evidence
 
 
+class ClusterCleanupError(RuntimeError):
+    """Cleanup reported failures. `alive` lists nodes whose exit is still unconfirmed.
+
+    Each failure has a `kind`: "unexpected_exit" (already exited without an injected
+    fault or a confirmed normal stop), "shutdown_unconfirmed" (normal stop was not
+    confirmed; a forced kill was attempted) or "kill_unconfirmed" (the process may still
+    be running). Only the last kind leaves a process that the owner must keep tracking.
+    """
+    def __init__(self, failures, alive):
+        self.failures, self.alive = failures, alive
+        super().__init__(f"Cluster cleanup failed: {failures}")
+
+
 class NodeStartError(RuntimeError):
     def __init__(self, node_id, record):
         self.record = record
@@ -165,34 +178,58 @@ class LocalCluster:
             await asyncio.sleep(0.01)
         raise TimeoutError(f"Missing real event: {node_id} {event} {message_id}")
 
+    def alive_nodes(self):
+        return [node_id for node_id, process in self.processes.items() if process.poll() is None]
+
     async def close(self):
+        # Processes (by PID) whose exit was already confirmed, with any failure already
+        # reported, by an earlier close() call are skipped: a retry only handles the rest.
+        released = getattr(self, "released", None)
+        if released is None:
+            released = self.released = set()
+        attempt = getattr(self, "cleanup_attempts", 0)
+        self.cleanup_attempts = attempt + 1
         failures = []
         try:
             for node_id, process in self.processes.items():
+                if process.pid in released and process.poll() is not None:
+                    continue
                 if process.poll() is not None:
                     injected = any(fault["pid"] == process.pid for fault in self.faults)
                     normal = process.returncode == 0 and bool(self.records(node_id, "node_stopped"))
                     if not injected and not normal:
-                        failures.append({"node": node_id, "error": "Unexpected process exit without injected fault or normal shutdown"})
+                        failures.append({"node": node_id, "kind": "unexpected_exit",
+                                         "error": "Unexpected process exit without injected fault or normal shutdown"})
+                    released.add(process.pid)
                     continue
-                if process.poll() is None:
-                    try:
-                        await stop_node(self.topology, node_id, timeout=3)
-                        process.wait(timeout=5)
-                        if process.returncode != 0 or not self.records(node_id, "node_stopped"):
-                            raise RuntimeError("Normal node shutdown was not confirmed")
-                    except Exception as exc:
-                        failures.append({"node": node_id, "error": str(exc)})
-                        if process.poll() is None:
+                try:
+                    await stop_node(self.topology, node_id, timeout=3)
+                    process.wait(timeout=5)
+                    if process.returncode != 0 or not self.records(node_id, "node_stopped"):
+                        raise RuntimeError("Normal node shutdown was not confirmed")
+                except Exception as exc:
+                    failures.append({"node": node_id, "kind": "shutdown_unconfirmed", "error": str(exc) or type(exc).__name__})
+                    if process.poll() is None:
+                        # A forced kill that cannot be confirmed must not stop cleanup of
+                        # the remaining nodes; the node stays owned for a later retry.
+                        try:
                             process.kill()
                             process.wait(timeout=5)
+                        except Exception as kill_error:
+                            failures.append({"node": node_id, "kind": "kill_unconfirmed", "error": "Forced kill not confirmed: "
+                                             + (str(kill_error) or type(kill_error).__name__)})
+                if process.poll() is not None:
+                    released.add(process.pid)
         finally:
             for handle in self.handles:
                 handle.close()
             evidence = {"transport": "real_tcp_loopback", "topology_origin": "simulation",
                         "observation_origin": "real_process", "processes": self.history, "faults": self.faults,
-                        "cleanup_failures": failures,
+                        "cleanup_failures": failures, "cleanup_attempt": attempt + 1,
+                        "alive_after_cleanup": self.alive_nodes(),
                         "events": {entry["log"]: read_events(self.directory / entry["log"]) for entry in self.history}}
-            (self.directory / "evidence.json").write_text(json.dumps(evidence, ensure_ascii=False, indent=2), encoding="utf-8")
+            # Keep the first evidence file unchanged; retries get their own file.
+            name = "evidence.json" if attempt == 0 else f"evidence-retry-{attempt}.json"
+            (self.directory / name).write_text(json.dumps(evidence, ensure_ascii=False, indent=2), encoding="utf-8")
         if failures:
-            raise RuntimeError(f"Cluster cleanup failed: {failures}")
+            raise ClusterCleanupError(failures, self.alive_nodes())
