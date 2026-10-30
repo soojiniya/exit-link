@@ -2,12 +2,15 @@ import type { ServerFrame } from '@contracts';
 import { call, WS_URL } from '@/api/client';
 import { useApp } from '@/store/store';
 import type { Snapshot, StreamEvent } from '@/store/types';
+import { isPublicDemo } from '@/domain/mode';
 
 /**
  * WebSocket 스트림 처리 (docs/stage-5-api-guide.md "WebSocket 이벤트 계약").
  * - 연결 직후 snapshot 1개로 상태 교체
  * - 같은 stream_id에서 sequence <= 적용 번호는 무시
  * - 번호가 비면 /events로 보충, reset_required 또는 stream_id 변경이면 /snapshot으로 교체
+ * - 공개 읽기 전용 API(exit_link.public_app)에는 /events 가 없으므로 공개 데모에서는 /events 를 부르지 않습니다.
+ *   기록 불러오기는 건너뛰고, 번호가 비면 바로 /snapshot 으로 교체합니다.
  * - 서버로는 아무 데이터도 보내지 않음(보내면 1008로 닫힘)
  */
 class EventStream {
@@ -100,6 +103,7 @@ class EventStream {
 
   /** 새로 연결한 경우 서버 보관 창(최근 512개)의 이벤트를 기록으로 불러옵니다. */
   private async loadHistory(streamId: string, sequence: number) {
+    if (isPublicDemo()) return; // 공개 API 에 없는 경로 — 현재 상태 표시는 snapshot 으로 충분합니다
     try {
       const page = await call('GET /api/v1/events', { query: { stream_id: streamId, after: Math.max(0, sequence - 511) } });
       if (!page.reset_required) useApp.getState().ingestHistory(page.events as StreamEvent[]);
@@ -110,6 +114,10 @@ class EventStream {
 
   private async fillGap(streamId: string, after: number) {
     useApp.getState().setConn('resyncing', null);
+    if (isPublicDemo()) {
+      await this.resnapshot(); // 공개 API 에는 /events 가 없으므로 snapshot 으로 다시 맞춥니다
+      return;
+    }
     try {
       const page = await call('GET /api/v1/events', { query: { stream_id: streamId, after } });
       if (page.reset_required || page.stream_id !== streamId) {

@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
-import { AlertCircle, ChevronDown, Focus, History, PanelRightClose, PanelRightOpen, Pause, Play, RotateCcw } from 'lucide-react';
+import { AlertCircle, ChevronDown, Focus, History, PanelBottomClose, PanelBottomOpen, PanelRightClose, PanelRightOpen, Pause, Play, RotateCcw } from 'lucide-react';
 import type { Place } from '@contracts';
 import type { LinkState, NodeState } from '@/domain/network';
 import {
@@ -12,6 +12,7 @@ import { pulsesAt, routeSweepAt } from '@/ui/replay/cinematicDirector';
 import { HudTile } from '@/ui/twin/HudTile';
 import { Dot, Empty, cx } from '@/ui/primitives';
 import { FocusToggle, LegendCard, NmHeadline, useBarBottom, useEscapeToExit } from './NetworkHud';
+import { WIDE_QUERY, asideInnerClass, asideShellClass, matches, useMediaQuery } from '@/ui/useMediaQuery';
 
 /**
  * Network Monitor · REPLAY 모드.
@@ -44,7 +45,8 @@ export function ReplayMonitor({ modeSwitch, places, focus, setFocus, initialCase
   const [problem, setProblem] = useState('');
   const [picked, setPicked] = useState<string | null>(null);
   const [selectedNode, setSelectedNode] = useState<string | null>(null);
-  const [panelOpen, setPanelOpen] = useState(true);
+  const [panelOpen, setPanelOpen] = useState(() => matches(WIDE_QUERY));
+  const wide = useMediaQuery(WIDE_QUERY);
   useEscapeToExit(focus, () => setFocus(false));
   const [barRef, barBottom] = useBarBottom();
 
@@ -177,8 +179,8 @@ export function ReplayMonitor({ modeSwitch, places, focus, setFocus, initialCase
   const nbViews = neighborViews(trial, t);
 
   return (
-    <div className="flex h-full min-h-0">
-      <div className="flex min-w-0 flex-1 flex-col">
+    <div className="flex h-full min-h-0 flex-col lg:flex-row">
+      <div className="flex min-h-0 min-w-0 flex-1 flex-col">
         {/* ── 무대: 토폴로지가 주인공 ── */}
         <div className="nm-stage relative min-h-0 flex-1 overflow-hidden" data-focus={focus || undefined}>
           {/* 토폴로지 영역: 일반 = 왼쪽 상태 열 오른쪽(겹치지 않게) · FOCUS = 전체 폭, 아래 이벤트 제목 띠를 비움 */}
@@ -285,14 +287,14 @@ export function ReplayMonitor({ modeSwitch, places, focus, setFocus, initialCase
               title={panelOpen ? '상세 패널 접기' : '상세 패널 펼치기'}
               className="glass-float lift absolute right-4 top-1/2 z-40 flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-full text-ink-2 hover:text-ink"
             >
-              {panelOpen ? <PanelRightClose size={16} /> : <PanelRightOpen size={16} />}
+              {wide ? (panelOpen ? <PanelRightClose size={16} /> : <PanelRightOpen size={16} />) : panelOpen ? <PanelBottomClose size={16} /> : <PanelBottomOpen size={16} />}
             </button>
           )}
         </div>
 
         {/* ── 하단 이벤트 덱 ── */}
         <div className="glass-chrome relative z-10 shrink-0 border-t">
-          <div className="panel-scroll max-h-[46vh] space-y-3 px-5 pb-3 pt-3">
+          <div className="panel-scroll max-h-[34vh] space-y-3 px-5 pb-3 pt-3 sm:max-h-[46vh]">
             <div ref={cards} className="no-scrollbar flex gap-2 overflow-x-auto pb-1" role="list" aria-label="핵심 이벤트">
               {keyMarks.length === 0 && <div className="text-[13px] text-ink-3">이 사례에는 장애·재전송·ACK 같은 핵심 이벤트 기록이 없습니다.</div>}
               {keyMarks.map((m, i) => {
@@ -394,9 +396,9 @@ export function ReplayMonitor({ modeSwitch, places, focus, setFocus, initialCase
       </div>
 
       {/* ── 오른쪽 상세(접힘·FOCUS 에서 숨김) ── */}
-      <div className={cx('aside-shell relative h-full shrink-0 overflow-hidden', showAside ? 'w-[320px] xl:w-[370px]' : 'w-0')} aria-hidden={!showAside}>
+      <div className={asideShellClass(showAside, 'lg:w-[320px] xl:w-[370px]')} aria-hidden={!showAside} data-testid="nm-aside">
         {showAside && (
-          <aside className="glass-chrome panel-scroll h-full w-[320px] space-y-4 border-l px-4 py-4 xl:w-[370px]" aria-label="재생 메시지 상세">
+          <aside className={cx('glass-chrome panel-scroll space-y-4 px-4 py-4', asideInnerClass('lg:w-[320px] xl:w-[370px]'))} aria-label="재생 메시지 상세">
             {nodeSel && (
               <section className="glass-inset rounded-2xl p-4" data-testid="nm-node-detail">
                 <div className="mb-2 flex items-center justify-between">

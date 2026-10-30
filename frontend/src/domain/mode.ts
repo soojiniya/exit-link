@@ -10,3 +10,6 @@ export const isPublicDemo = () => publicDemo;
 export const setPublicDemoForTest = (value: boolean) => {
   publicDemo = value;
 };
+
+/** 공개 데모에서 쓰기 관련 버튼·문구 대신 보여 주는 읽기 전용 안내(토큰을 요구하는 문구를 쓰지 않습니다). */
+export const PUBLIC_READONLY_HINT = '공개 화면은 읽기 전용입니다 — 제어 요청을 보내지 않습니다';

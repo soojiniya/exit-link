@@ -214,7 +214,7 @@ select, input, textarea { color-scheme: dark; }
   .twin-stage { background: radial-gradient(95% 80% at 50% 45%, rgba(58, 86, 140, 0.22) 0%, rgba(14, 20, 32, 0.6) 48%, rgba(5, 8, 14, 0.92) 100%), radial-gradient(60% 40% at 50% 100%, rgba(var(--glow-cyan), 0.06), transparent 70%); }
   .stage-vignette { background: linear-gradient(180deg, rgba(5, 8, 14, 0.55) 0%, transparent 18%, transparent 78%, rgba(5, 8, 14, 0.5) 100%), radial-gradient(130% 100% at 50% 50%, transparent 62%, rgba(0, 0, 0, 0.45) 100%); }
   .control-bar { box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.09), 0 0 0 1px rgba(255, 255, 255, 0.04), 0 24px 50px -24px rgba(0, 0, 0, 0.95); }
-  .aside-shell { transition: width .6s var(--ease-in-out); }
+  .aside-shell { transition: width .6s var(--ease-in-out), height .45s var(--ease-in-out); }
   .event-card { transition: transform .35s var(--ease-out), opacity .5s var(--ease-out), background-color .35s var(--ease-out), border-color .35s var(--ease-out), box-shadow .5s var(--ease-out); }
   .chapter[disabled] { pointer-events: none; }
   .no-scrollbar { scrollbar-width: none; }
