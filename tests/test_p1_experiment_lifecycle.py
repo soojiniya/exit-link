@@ -235,8 +235,11 @@ def test_failed_cleanup_keeps_ownership_blocks_new_start_and_can_be_retried(back
         assert blocked.value.status_code == 409 and blocked.value.detail["code"] == "experiment_exists"
         assert len(FakeCluster.instances) == 1
         FakeCluster.close_error = None
-        view = await backend.stop_experiment()  # retry on the preserved owner
-        assert view.status == "stopped" and backend.cluster is None and all_stopped(cluster)
+        with pytest.raises(HTTPException) as retry:  # retry on the preserved owner
+            await backend.stop_experiment()
+        # All processes are gone and ownership is released, but the earlier failure stays visible.
+        assert retry.value.detail["code"] == "experiment_cleanup_failed"
+        assert backend.experiment.status == "failed" and backend.cluster is None and all_stopped(cluster)
         assert cluster.close_calls == 2
         assert (await backend.start_experiment()).status == "running"
     asyncio.run(run())
@@ -263,7 +266,10 @@ def test_start_failure_with_failed_cleanup_keeps_owner_until_retry(backend):
             await backend.start_experiment()
         assert blocked.value.detail["code"] == "experiment_exists"
         FakeCluster.close_error = None
-        assert (await backend.stop_experiment()).status == "stopped" and all_stopped(cluster)
+        with pytest.raises(HTTPException) as retry:
+            await backend.stop_experiment()
+        assert retry.value.detail["code"] == "experiment_cleanup_failed" and "SilentTimeout" in retry.value.detail["message"]
+        assert backend.cluster is None and all_stopped(cluster)
     asyncio.run(run())
 
 
@@ -290,6 +296,7 @@ def fake_local_cluster(tmp_path, monkeypatch, processes):
     cluster = object.__new__(module.LocalCluster)
     cluster.directory, cluster.topology = tmp_path, load_communication()
     cluster.processes, cluster.handles, cluster.history, cluster.faults = processes, [], [], []
+    cluster.relay_delay = 0
 
     async def stop_node(topology, node_id, timeout=3):
         raise ConnectionRefusedError()  # empty message on purpose
@@ -316,3 +323,90 @@ def test_local_cluster_close_continues_after_unconfirmed_kill_and_retry_succeeds
     asyncio.run(cluster.close())      # nothing left to clean: succeeds
     assert (tmp_path / "evidence.json").exists()
     assert sorted(p.name for p in tmp_path.glob("evidence-retry-*.json")) == ["evidence-retry-1.json", "evidence-retry-2.json"]
+
+
+# ------------------------------------------------- PR #1 review follow-up -----
+
+def running_backend_with(backend, cluster):
+    from uuid import uuid4
+    backend.cluster = cluster
+    backend.experiment = backend.experiment.model_copy(update={"experiment_id": uuid4(), "status": "running"})
+    return backend
+
+
+def test_review_all_nodes_dead_but_anomalous_reports_failure_without_keeping_ownership(backend, tmp_path, monkeypatch):
+    """Every node already exited, one without an injected fault or confirmed normal stop."""
+    async def run():
+        crashed = Proc(11, alive=False, returncode=1)
+        injected = Proc(12, alive=False, returncode=-9)
+        cluster = fake_local_cluster(tmp_path / "c", monkeypatch, {"N1": crashed, "N2": injected})
+        cluster.faults = [{"pid": 12}]
+        running_backend_with(backend, cluster)
+        with pytest.raises(HTTPException) as error:
+            await backend.stop_experiment()
+        assert error.value.status_code == 503 and error.value.detail["code"] == "experiment_cleanup_failed"
+        assert "Unexpected process exit" in error.value.detail["message"]
+        assert backend.experiment.status == "failed"
+        # Nothing is alive: ownership is not kept, so a new experiment may start.
+        assert backend.cluster is None
+        assert (await backend.start_experiment()).status == "running"
+    (tmp_path / "c").mkdir()
+    asyncio.run(run())
+
+
+def test_review_retry_after_failure_releases_ownership_but_stays_failed(backend, tmp_path, monkeypatch):
+    async def run():
+        stuck = Proc(21, kill_fails=True)
+        crashed = Proc(22, alive=False, returncode=1)
+        cluster = fake_local_cluster(tmp_path / "c", monkeypatch, {"N1": stuck, "N2": crashed})
+        running_backend_with(backend, cluster)
+        with pytest.raises(HTTPException):
+            await backend.stop_experiment()
+        assert backend.cluster is cluster  # N1 may still be alive
+        stuck.kill_fails = False
+        with pytest.raises(HTTPException) as retry:
+            await backend.stop_experiment()  # first retry: N1 needs a forced kill (new failure)
+        assert backend.cluster is None and stuck.poll() is not None
+        assert retry.value.detail["code"] == "experiment_cleanup_failed"
+        assert backend.experiment.status == "failed" and backend.experiment.last_error
+    (tmp_path / "c").mkdir()
+    asyncio.run(run())
+
+
+def test_review_retry_with_no_new_failure_does_not_turn_earlier_failure_into_success(backend):
+    async def run():
+        await backend.start_experiment()
+        cluster = FakeCluster.instances[0]
+        FakeCluster.close_error = RuntimeError("Cluster cleanup failed: N2 kill not confirmed")
+        with pytest.raises(HTTPException):
+            await backend.stop_experiment()
+        FakeCluster.close_error = None
+        with pytest.raises(HTTPException) as retry:
+            await backend.stop_experiment()
+        assert retry.value.status_code == 503 and retry.value.detail["code"] == "experiment_cleanup_failed"
+        assert "N2 kill not confirmed" in retry.value.detail["message"]
+        assert backend.experiment.status == "failed"
+        assert backend.cluster is None and all_stopped(cluster)
+        # The next experiment starts from a clean history.
+        view = await backend.start_experiment()
+        assert view.status == "running"
+        assert (await backend.stop_experiment()).status == "stopped"
+    asyncio.run(run())
+
+
+def test_review_failure_kinds_are_distinguished_and_ownership_tracked_by_pid(tmp_path, monkeypatch):
+    stuck = Proc(31, kill_fails=True)
+    refused = Proc(32)
+    crashed = Proc(33, alive=False, returncode=1)
+    cluster = fake_local_cluster(tmp_path, monkeypatch, {"N1": stuck, "N2": refused, "N3": crashed})
+    with pytest.raises(RuntimeError) as error:
+        asyncio.run(cluster.close())
+    kinds = {(f["node"], f["kind"]) for f in error.value.failures}
+    assert kinds == {("N1", "shutdown_unconfirmed"), ("N1", "kill_unconfirmed"),
+                     ("N2", "shutdown_unconfirmed"), ("N3", "unexpected_exit")}
+    assert error.value.alive == ["N1"]
+    assert cluster.released == {32, 33}
+    import json
+    evidence = json.loads((tmp_path / "evidence.json").read_text(encoding="utf-8"))
+    assert evidence["alive_after_cleanup"] == ["N1"]
+    assert {f["kind"] for f in evidence["cleanup_failures"]} == {"shutdown_unconfirmed", "kill_unconfirmed", "unexpected_exit"}

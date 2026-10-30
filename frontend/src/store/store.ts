@@ -64,13 +64,17 @@ const markOf = (e: StreamEvent): ExperimentMark => {
 };
 
 /**
- * REST 응답과 WebSocket 이벤트는 도착 순서가 뒤바뀔 수 있습니다.
+ * REST 응답과 WebSocket 이벤트는 도착 순서가 뒤바뀔 수 있습니다. 결과가 도착 순서와 무관하도록 병합합니다.
  * - 더 높은 revision: 위험 구역이 바뀌어 모든 경로가 재계산된 상태이므로 통째로 교체합니다.
  * - 더 낮은 revision: 늦게 도착한 응답이므로 무시합니다(null).
- * - 같은 revision: 출발지 등록·안내 전송은 revision을 올리지 않으므로, 출발지별로 route_version이
- *   더 높은(같으면 새로 받은) 경로를 남기고 어느 쪽에만 있는 출발지 경로도 지우지 않습니다.
- *   events는 같은 revision 안에서 계속 쌓이므로 더 긴 쪽을 최신으로 봅니다.
+ * - 같은 revision: 출발지 등록·안내 전송은 revision을 올리지 않습니다.
+ *   · 경로: 출발지별로 route_version이 높은 것, 같으면 calculated_at이 늦은 것을 남깁니다(같으면 기존 유지).
+ *     어느 한쪽에만 있는 출발지 경로도 지우지 않습니다.
+ *   · events: 서버에서 추가만 되는 기록이므로 event_id 기준 합집합을 시각 순으로 정렬합니다.
  */
+const planNewer = (a: WsScenarioSnapshot['plans'][number], b: WsScenarioSnapshot['plans'][number]) =>
+  b.route_version !== a.route_version ? b.route_version > a.route_version : Date.parse(b.calculated_at) > Date.parse(a.calculated_at);
+
 export function mergeScenario(prev: WsScenarioSnapshot | undefined, next: WsScenarioSnapshot): WsScenarioSnapshot | null {
   if (!prev || next.state.revision > prev.state.revision) return next;
   if (next.state.revision < prev.state.revision) return null;
@@ -78,10 +82,15 @@ export function mergeScenario(prev: WsScenarioSnapshot | undefined, next: WsScen
   for (const p of next.plans) {
     const i = plans.findIndex((x) => x.start_location === p.start_location);
     if (i === -1) plans.push(p);
-    else if (plans[i].route_version <= p.route_version) plans[i] = p;
+    else if (planNewer(plans[i], p)) plans[i] = p;
   }
-  const base = next.events.length >= prev.events.length ? next : prev;
-  return { ...base, plans };
+  const seen = new Set(prev.events.map((e) => e.event_id));
+  const events = [...prev.events, ...next.events.filter((e) => !seen.has(e.event_id))]
+    .map((e, order) => ({ e, order, t: Date.parse(e.timestamp) }))
+    .sort((x, y) => x.t - y.t || x.order - y.order)
+    .map((x) => x.e);
+  const latest = Date.parse(next.state.updated_at) > Date.parse(prev.state.updated_at) ? next : prev;
+  return { ...latest, plans, events };
 }
 
 export const useApp = create<AppState>((set) => ({

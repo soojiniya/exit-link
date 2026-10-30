@@ -164,4 +164,50 @@ await test('a REST response from before a server restart is not merged into the 
   assert.equal(useApp.getState().activeScenarioId, null);
 });
 
+
+// ---- PR #1 review: same-revision merge must be order-independent and lossless ----
+const ev = (id: string, second: number, event = 'route_calculated') => ({ event_id: id, timestamp: `2026-10-21T00:00:${String(second).padStart(2, '0')}Z`,
+  scenario_id: 'unit-scenario', scenario_revision: 2, event, origin: 'computation', details: {} }) as WsScenarioSnapshot['events'][number];
+const withEvents = (plans: WsScenarioSnapshot['plans'], events: WsScenarioSnapshot['events']): WsScenarioSnapshot => ({
+  ...scenario, state: { ...scenario.state, revision: 2 }, plans, events });
+const at = (p: WsScenarioSnapshot['plans'][number], second: number, path: string[]) =>
+  ({ ...p, calculated_at: `2026-10-21T00:00:${String(second).padStart(2, '0')}Z`, path }) as WsScenarioSnapshot['plans'][number];
+const stateOf = () => {
+  const sc = useApp.getState().scenarios['unit-scenario'];
+  return { events: sc.events.map((e) => e.event_id), plans: Object.fromEntries(sc.plans.map((p) => [p.start_location, [p.route_version, p.path.join('>')]])) };
+};
+
+await test('same revision, same event count, different events: no event is lost', () => {
+  reset();
+  useApp.getState().upsertScenario(withEvents([planFor('F2_E', 1)], [ev('a', 1), ev('b', 2)]));
+  useApp.getState().upsertScenario(withEvents([planFor('F2_E', 1)], [ev('a', 1), ev('c', 3)]));
+  assert.deepEqual(stateOf().events, ['a', 'b', 'c']);
+});
+
+await test('same route_version with different path keeps the later calculation', () => {
+  reset();
+  const fresh = at(planFor('F2_E', 1), 9, ['F2_E', 'F2_SE', 'EXIT_E']);
+  const stale = at(planFor('F2_E', 1), 1, ['F2_E', 'EXIT_W']);
+  useApp.getState().upsertScenario(withEvents([fresh], [ev('a', 1)]));
+  useApp.getState().upsertScenario(withEvents([stale], [ev('a', 1)]));
+  assert.equal(stateOf().plans.F2_E[1], 'F2_E>F2_SE>EXIT_E');
+});
+
+await test('REST and WebSocket arriving in either order give the same final state', () => {
+  const older = withEvents([at(planFor('F2_E', 1), 1, ['F2_E', 'EXIT_W'])], [ev('a', 1), ev('b', 2)]);
+  const newer = withEvents([at(planFor('F2_E', 1), 5, ['F2_E', 'F2_SE', 'EXIT_E']), planFor('F3_W', 1)], [ev('a', 1), ev('c', 4)]);
+  reset();
+  useApp.getState().upsertScenario(older);                                          // REST first
+  useApp.getState().applyEvent(event('scenario.changed', newer, 1));                // then WS
+  const restFirst = stateOf();
+  reset();
+  useApp.getState().applyEvent(event('scenario.changed', newer, 1));                // WS first
+  useApp.getState().upsertScenario(older);                                          // late REST
+  const wsFirst = stateOf();
+  assert.deepEqual(restFirst, wsFirst);
+  assert.deepEqual(wsFirst.events, ['a', 'b', 'c']);
+  assert.equal(wsFirst.plans.F2_E[1], 'F2_E>F2_SE>EXIT_E');
+  assert.ok(wsFirst.plans.F3_W, 'new start must not disappear');
+});
+
 reset();

@@ -45,6 +45,17 @@ async def settle(task):
     return cancelled
 
 
+def owned_processes_remain(cluster):
+    """True while any owned process may still be running (unknown counts as running)."""
+    alive = getattr(cluster, "alive_nodes", None)
+    if callable(alive):
+        return bool(alive())
+    processes = getattr(cluster, "processes", None)
+    if processes is None:
+        return True
+    return any(process.poll() is None for process in processes.values())
+
+
 class Backend:
     def __init__(self, settings: ApiSettings):
         self.settings = settings
@@ -61,6 +72,9 @@ class Backend:
         self.inflight = 0
         self.archive = Archive(settings.database_path or settings.artifact_directory / "history.sqlite3", settings.persistence_enabled)
         self.archive_contexts, self.message_contexts = {}, {}
+        # Cleanup failures of the currently owned cluster; a later successful retry
+        # must not report the experiment as cleanly stopped.
+        self.cleanup_errors = []
 
     def archive_context(self, experiment_id=None):
         experiment_id = str(experiment_id) if experiment_id else (str(self.experiment.experiment_id) if self.cluster else None)
@@ -230,6 +244,7 @@ class Backend:
             starter = None
             try:
                 self.cluster = LocalCluster(self.settings.artifact_directory / str(experiment_id), relay_delay=0)
+                self.cleanup_errors = []
                 self.reset_network()
                 self.archive.record("config", {}, self.archive_context(experiment_id))
                 # The worker thread cannot be cancelled. Keep a handle to it so that a
@@ -264,9 +279,13 @@ class Backend:
                 await self.cluster.close()
             except Exception as cleanup:
                 error += "; cleanup: " + describe(cleanup)
-                owned = True  # keep ownership: stop_experiment can retry cleanup
+                # Keep ownership only while a process may still run; stop_experiment retries.
+                owned = owned_processes_remain(self.cluster)
+                if owned:
+                    self.__dict__.setdefault("cleanup_errors", []).append(error)
         if not owned:
             self.cluster = None
+            self.cleanup_errors = []
             self.reset_network()
         self.experiment_changed(status="failed", last_error=error)
         self.control_completed(action, error=error)
@@ -325,20 +344,28 @@ class Backend:
             # A cancelled stop request must not abandon a half-finished cleanup.
             closing = asyncio.ensure_future(cluster.close())
             cancelled = await settle(closing)
+            earlier = self.__dict__.setdefault("cleanup_errors", [])
             try:
                 try:
                     closing.result()
                 except Exception:
-                    # Process exit was not confirmed: keep the owner so that no new
-                    # experiment can start beside it and a later stop can retry cleanup.
-                    owned = True
+                    # Keep the owner only while a process may still be running, so that no
+                    # new experiment starts beside it and a later stop can retry cleanup.
+                    owned = owned_processes_remain(cluster)
                     raise
                 self.collect_logs(cluster)
+                if earlier:
+                    # Every process is confirmed gone now, but an earlier attempt failed:
+                    # report the experiment's cleanup as failed, never as a clean stop.
+                    error = "Cleanup completed on retry after an earlier failure: " + earlier[-1]
             except Exception as exc:
                 error = str(exc) or type(exc).__name__
             finally:
-                if not owned:
+                if owned:
+                    earlier.append(error)
+                else:
                     self.cluster = None
+                    self.cleanup_errors = []
                     self.reset_network()
                 self.experiment_changed(status="failed" if error is not None else "stopped", last_error=error)
                 self.control_completed(action, error=error)
