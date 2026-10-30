@@ -1,6 +1,6 @@
 import { Suspense, lazy, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import { Building2, ChevronDown, ChevronUp, Crosshair, Flame, Footprints, Layers3, Minus, PanelRightClose, PanelRightOpen, Plus, RotateCcw, Sofa, Video, Waypoints } from 'lucide-react';
+import { Building2, ChevronDown, ChevronUp, Crosshair, Flame, Footprints, Layers3, Minus, PanelBottomClose, PanelBottomOpen, PanelRightClose, PanelRightOpen, Plus, RotateCcw, Sofa, Video, Waypoints } from 'lucide-react';
 import { useApp } from '@/store/store';
 import { useActiveScenario, useNetworkDerived } from '@/store/selectors';
 import { checkLayout, layout } from '@/domain/layout';
@@ -14,6 +14,8 @@ import { useTwinReplay } from '@/ui/replay/useTwinReplay';
 import { CinematicCaption, TwinReplayAside, TwinReplayDeck, TwinReplayHud, TwinReplayTransport } from '@/ui/replay/TwinReplayPanels';
 import { HudTile } from '@/ui/twin/HudTile';
 import type { DirectorShot } from '@/ui/replay/cinematicDirector';
+import { NARROW_QUERY, WIDE_QUERY, asideInnerClass, asideShellClass, matches, useMediaQuery } from '@/ui/useMediaQuery';
+import { isPublicDemo } from '@/domain/mode';
 
 const TwinCanvas = lazy(() => import('@/three/TwinCanvas').then((m) => ({ default: m.TwinCanvas })));
 
@@ -34,6 +36,8 @@ const MODES: { key: Mode; label: string; title: string }[] = [
 const SHOT_HOLD_MS = 1600;
 /** CINEMATIC 화면에서 3D 위를 덮는 UI 영역(px): 왼쪽 HUD·위 control bar·오른쪽 층 버튼 */
 const CINE_INSETS = { left: 370, top: 92, right: 96, bottom: 36 };
+/** 휴대폰 폭(sm 미만)에서는 왼쪽 HUD 를 숨기므로 3D 프레이밍 여백도 줄입니다(PC 값은 그대로). */
+const CINE_INSETS_NARROW = { left: 12, top: 120, right: 64, bottom: 150 };
 
 /**
  * 자동 연출 샷을 받아, 재생 중에는 최소 SHOT_HOLD_MS 동안 유지한 뒤 다음 샷으로 넘깁니다.
@@ -141,7 +145,10 @@ export default function DigitalTwin() {
   const { network, nodes, links, latestFlow } = useNetworkDerived();
   const [layers, setLayers] = useState<Layers>({ hazards: true, evac: true, network: true, decor: true });
   const [highlightStart, setHighlightStart] = useState<string | null>(null);
-  const [panelOpen, setPanelOpen] = useState(true);
+  // 넓은 화면은 기존처럼 패널을 펼친 채 시작하고, 좁은 화면은 3D 를 먼저 보이도록 접은 채 시작합니다.
+  const [panelOpen, setPanelOpen] = useState(() => matches(WIDE_QUERY));
+  const wide = useMediaQuery(WIDE_QUERY);
+  const narrow = useMediaQuery(NARROW_QUERY);
   const [logOpen, setLogOpen] = useState(false);
   // 시나리오가 바뀌면 화재가 있는 층으로 한 번 초점을 옮깁니다.
   const firstFire = scenario?.state.hazards.fire_locations[0];
@@ -167,8 +174,8 @@ export default function DigitalTwin() {
   const lastEvent = timeline[timeline.length - 1];
 
   return (
-    <div className="flex h-full min-h-0">
-      <div className="flex min-w-0 flex-1 flex-col">
+    <div className="flex h-full min-h-0 flex-col lg:flex-row">
+      <div className="flex min-h-0 min-w-0 flex-1 flex-col">
         {/* ── 무대: 3D 히어로 ── */}
         <div className="twin-stage relative min-h-0 flex-1 overflow-hidden" data-twin-shot={cameraShot?.key ?? ''} data-twin-autocam={cinematic ? String(autoCam) : undefined}>
           {!building ? (
@@ -194,7 +201,7 @@ export default function DigitalTwin() {
                 cinematic={cinematic}
                 wheelZoom={!cinematic}
                 shot={cameraShot}
-                insets={CINE_INSETS}
+                insets={narrow ? CINE_INSETS_NARROW : CINE_INSETS}
                 onUserCamera={userTookCamera}
               />
             </Suspense>
@@ -217,8 +224,8 @@ export default function DigitalTwin() {
             </div>
           </div>
 
-          {/* 좌상단: 층 타이포 + 핵심 상태 */}
-          <div className="absolute left-6 top-[84px] z-40 flex flex-col gap-3">
+          {/* 좌상단: 층 타이포 + 핵심 상태 — 휴대폰 폭(sm 미만)에서는 control bar 가 여러 줄로 감겨 3D 를 가리므로 숨깁니다(층은 오른쪽 아래 버튼, 이벤트는 하단 덱에서 확인) */}
+          <div className="absolute left-6 top-[84px] z-40 hidden flex-col gap-3 sm:flex" data-testid="twin-left-hud">
             <div className={cx('pointer-events-none', cinematic && 'cine-hide-short')}>
               <div className="eyebrow">Digital Twin · <span className="text-ink-2">{building?.building.building_id ?? '—'}</span></div>
               <div className="mt-2 flex items-end gap-3">
@@ -235,11 +242,11 @@ export default function DigitalTwin() {
             {isReplay ? (
               <TwinReplayHud r={replay} cinematic={cinematic} />
             ) : (
-              <div className="grid w-[250px] gap-1.5">
+              <div className="grid w-[250px] gap-1.5" data-testid="twin-hud-live">
                 <HudTile
                   label="시나리오"
                   value={!scenario ? '활성 시나리오 없음' : hz?.fire_locations.length ? `화재 · ${placeLabel(hz.fire_locations[0])}` : hz && (hz.blocked_nodes.length || hz.dangerous_nodes.length) ? '위험 구역 지정' : '위험 없음'}
-                  sub={scenario ? `rev ${scenario.state.revision} · SIM` : '제어 패널에서 생성'}
+                  sub={scenario ? `rev ${scenario.state.revision} · SIM` : isPublicDemo() ? '읽기 전용 · 로컬 실험 환경에서 생성' : '제어 패널에서 생성'}
                   tone={!scenario ? 'idle' : hz?.fire_locations.length ? 'fail' : hz && (hz.blocked_nodes.length || hz.dangerous_nodes.length) ? 'warn' : 'neutral'}
                   testId="twin-hud-scenario"
                 />
@@ -285,7 +292,7 @@ export default function DigitalTwin() {
               title={panelOpen ? '상세 패널 접기' : '상세 패널 펼치기'}
               className="glass-float lift absolute right-4 top-1/2 z-40 flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-full text-ink-2 hover:text-ink"
             >
-              {panelOpen ? <PanelRightClose size={16} /> : <PanelRightOpen size={16} />}
+              {wide ? (panelOpen ? <PanelRightClose size={16} /> : <PanelRightOpen size={16} />) : panelOpen ? <PanelBottomClose size={16} /> : <PanelBottomOpen size={16} />}
             </button>
           )}
 
@@ -361,7 +368,7 @@ export default function DigitalTwin() {
 
         {/* ── 하단: 이벤트 덱(REPLAY) / 이벤트 기록(LIVE) ── */}
         {isReplay ? (
-          <div className="deck glass-chrome relative z-10 shrink-0 border-t">
+          <div className="deck glass-chrome relative z-10 max-h-[34vh] shrink-0 overflow-y-auto border-t sm:max-h-none sm:overflow-visible" data-testid="twin-replay-deck">
             <TwinReplayDeck r={replay} cinematic={cinematic} />
           </div>
         ) : (
@@ -372,9 +379,9 @@ export default function DigitalTwin() {
               aria-expanded={logOpen}
               className="flex w-full items-center gap-3 px-5 py-2.5 text-left transition hover:bg-white/[0.03]"
             >
-              <span className="text-[12px] font-medium uppercase tracking-[0.14em] text-ink-3">이벤트 · 경로 전환 기록</span>
+              <span className="shrink-0 whitespace-nowrap text-[12px] font-medium uppercase tracking-[0.14em] text-ink-3"><span className="sm:hidden">이벤트</span><span className="hidden sm:inline">이벤트 · 경로 전환 기록</span></span>
               <span className="truncate text-[13px] text-ink-2">{lastEvent ? `최근: ${lastEvent.title}` : '아직 수신한 이벤트가 없습니다'}</span>
-              <span className="ml-auto flex items-center gap-1 text-[12px] text-ink-3">{timeline.length}건 {logOpen ? <ChevronDown size={14} /> : <ChevronUp size={14} />}</span>
+              <span className="ml-auto flex shrink-0 items-center gap-1 whitespace-nowrap text-[12px] text-ink-3">{timeline.length}건 {logOpen ? <ChevronDown size={14} /> : <ChevronUp size={14} />}</span>
             </button>
             {logOpen && (
               <div className="h-[170px] border-t border-white/[0.06] [@media(min-height:900px)]:h-[210px]">
@@ -391,10 +398,10 @@ export default function DigitalTwin() {
       </div>
 
       {/* ── 오른쪽 상세 패널(접힘) ── */}
-      <div className={cx('aside-shell relative h-full shrink-0 overflow-hidden', showAside ? 'w-[320px] xl:w-[380px]' : 'w-0')} aria-hidden={!showAside}>
+      <div className={asideShellClass(showAside)} aria-hidden={!showAside} data-testid="twin-aside">
         {showAside &&
           (isReplay ? (
-            <aside className="glass-chrome panel-scroll h-full w-[320px] border-l xl:w-[380px]" aria-label="재생 상세">
+            <aside className={cx('glass-chrome panel-scroll', asideInnerClass())} aria-label="재생 상세">
               <TwinReplayAside r={replay} />
             </aside>
           ) : (

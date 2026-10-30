@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import type { ActionResult } from '@/api/actions';
+import { PUBLIC_READONLY_HINT, isPublicDemo } from '@/domain/mode';
 import { cx } from '../primitives';
 
 export type Feedback = { ok: boolean; text: string } | null;
@@ -28,6 +29,8 @@ export function FeedbackLine({ msg }: { msg: Feedback }) {
   return <div role="status" className={cx('mt-2 rounded-md px-2.5 py-1.5 text-2xs leading-relaxed', msg.ok ? 'bg-ok/10 text-[#73C9A0]' : 'bg-fail/10 text-[#F2878A]')}>{msg.text}</div>;
 }
 
+/** 쓰기 버튼을 비활성화하는 이유. 공개 데모에서는 토큰을 요구하지 않고 읽기 전용 안내를 돌려줍니다. */
 export function needToken(hasToken: boolean) {
+  if (isPublicDemo()) return PUBLIC_READONLY_HINT;
   return hasToken ? undefined : '제어 토큰이 필요합니다';
 }

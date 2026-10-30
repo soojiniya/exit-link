@@ -7,7 +7,8 @@ import { NODE_STATUS_LABEL, STATUS_COLOR, type NodeState } from '@/domain/networ
 import { toTimeline } from '@/store/timeline';
 import { timeOf } from '@/domain/format';
 import { Button, Dot, Empty, SectionLabel, SourceBadge, cx } from '../primitives';
-import { FeedbackLine, useAction } from '../lab/useAction';
+import { FeedbackLine, needToken, useAction } from '../lab/useAction';
+import { isPublicDemo } from '@/domain/mode';
 
 const NB: Record<string, string> = { up: 'text-[#73C9A0]', suspect: 'text-[#EDAA6B]', down: 'text-[#F2878A]', unknown: 'text-ink-3' };
 
@@ -58,12 +59,12 @@ export function NodeDetail({ node, network, places }: { node: NodeState | null; 
           <dt className="text-ink-3">프로세스</dt><dd className="font-mono">{owned ? `PID ${owned.pid} · ${owned.running ? 'running' : 'stopped'}` : '실험 소유 아님'}</dd>
           {view?.error && (<><dt className="text-ink-3">오류</dt><dd className="break-words font-mono text-[11px] text-[#F2878A]">{view.error}</dd></>)}
         </dl>
-        {running && owned && (
+        {running && owned && !isPublicDemo() && (
           <div className="mt-3">
             {owned.running ? (
-              <Button variant="danger" disabled={!hasToken || !!a.busy} title={hasToken ? undefined : '제어 토큰이 필요합니다'} onClick={() => a.exec('f', () => actions.failNode(node.id), `${node.id} 프로세스를 종료했습니다`)}><Power size={12} /> 장애 주입</Button>
+              <Button variant="danger" disabled={!hasToken || !!a.busy} title={needToken(hasToken)} onClick={() => a.exec('f', () => actions.failNode(node.id), `${node.id} 프로세스를 종료했습니다`)}><Power size={12} /> 장애 주입</Button>
             ) : (
-              <Button variant="outline" disabled={!hasToken || !!a.busy} title={hasToken ? undefined : '제어 토큰이 필요합니다'} onClick={() => a.exec('r', () => actions.recoverNode(node.id), `${node.id} 재시작 요청`)}><RefreshCw size={12} /> 복구</Button>
+              <Button variant="outline" disabled={!hasToken || !!a.busy} title={needToken(hasToken)} onClick={() => a.exec('r', () => actions.recoverNode(node.id), `${node.id} 재시작 요청`)}><RefreshCw size={12} /> 복구</Button>
             )}
             <FeedbackLine msg={a.msg} />
           </div>

@@ -35,7 +35,7 @@ export default function SimulationLab() {
               </h1>
               <p className="mt-2 max-w-[78ch] text-[13.5px] leading-relaxed text-ink-3">
                 재난 시나리오(가상)를 구성하고, 실제 TCP 노드 프로세스에 장애를 주입한 뒤 경로 재계산·대체 경로 전환·안내 전달을 기록합니다.
-                제어 버튼은 실제 FastAPI 요청을 보내며, 표시 값은 응답과 실시간 수신값만 사용합니다.
+                {readOnly ? '공개 화면은 읽기 전용이며 제어 요청을 보내지 않습니다. 표시 값은 공개 API 응답과 실시간 수신값만 사용합니다.' : '제어 버튼은 실제 FastAPI 요청을 보내며, 표시 값은 응답과 실시간 수신값만 사용합니다.'}
               </p>
             </div>
             <Link to="/twin" className="lift inline-flex h-9 items-center gap-1.5 rounded-full border border-white/12 bg-white/[0.04] px-3.5 text-[12.5px] text-ink-2 hover:border-white/25 hover:text-ink">
@@ -53,7 +53,7 @@ export default function SimulationLab() {
 
         {/* C. 제어 영역 */}
         <div className="grid grid-cols-1 gap-5 xl:grid-cols-2">
-          <StepCard id="lab-sec-env" no="01" title="환경 및 제어 권한" desc="쓰기 요청에는 서버의 제어 토큰이 필요합니다." right={<SourceBadge origin="CTRL" />}>
+          <StepCard id="lab-sec-env" no="01" title="환경 및 제어 권한" desc={readOnly ? '공개 화면은 읽기 전용입니다. 실험 제어는 로컬 실험 환경에서만 가능합니다.' : '쓰기 요청에는 서버의 제어 토큰이 필요합니다.'} right={<SourceBadge origin="CTRL" />}>
             {readOnly ? locked : <TokenSection />}
             <EnvChecklist env={env} />
           </StepCard>

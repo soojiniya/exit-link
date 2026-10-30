@@ -1,6 +1,6 @@
 import { useCallback, useMemo, useState, type ReactNode } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import { ChevronDown, ChevronUp, PanelRightClose, PanelRightOpen, RefreshCw } from 'lucide-react';
+import { ChevronDown, ChevronUp, Lock, PanelBottomClose, PanelBottomOpen, PanelRightClose, PanelRightOpen, RefreshCw } from 'lucide-react';
 import type { Place } from '@contracts';
 import { useApp } from '@/store/store';
 import { useNetworkDerived } from '@/store/selectors';
@@ -16,6 +16,8 @@ import { useNow } from '@/ui/TopBar';
 import { ReplayMonitor } from '@/ui/network/ReplayMonitor';
 import { FocusToggle, LegendCard, useBarBottom, useEscapeToExit } from '@/ui/network/NetworkHud';
 import { HudTile } from '@/ui/twin/HudTile';
+import { WIDE_QUERY, asideInnerClass, asideShellClass, matches, useMediaQuery } from '@/ui/useMediaQuery';
+import { PUBLIC_READONLY_HINT, isPublicDemo } from '@/domain/mode';
 
 const LEGEND: [string, string][] = [
   ['정상(up)', '#3FB27F'],
@@ -77,7 +79,9 @@ function LiveNetworkMonitor({ modeSwitch, focus, setFocus }: { modeSwitch: React
   const select = useApp((s) => s.select);
   const { network, experiment, nodes, links, flows } = useNetworkDerived();
   const [pickedFlow, setPickedFlow] = useState<string | null>(null);
-  const [panelOpen, setPanelOpen] = useState(true);
+  // 넓은 화면은 기존처럼 펼친 채, 좁은 화면은 토폴로지를 먼저 보이도록 접은 채 시작합니다.
+  const [panelOpen, setPanelOpen] = useState(() => matches(WIDE_QUERY));
+  const wide = useMediaQuery(WIDE_QUERY);
   const [deckOpen, setDeckOpen] = useState<boolean | null>(null);
   const refresh = useAction();
   useEscapeToExit(focus, () => setFocus(false));
@@ -104,15 +108,22 @@ function LiveNetworkMonitor({ modeSwitch, focus, setFocus }: { modeSwitch: React
               <span className="h-1.5 w-1.5 rounded-full" style={{ background: network.observation_status === 'observed' ? '#3FC28A' : network.observation_status === 'error' ? '#EF5A5F' : '#7C8799', boxShadow: network.observation_status === 'observed' ? '0 0 8px rgba(63,194,138,0.9)' : undefined }} />
               {network.topology.topology_id} · 관측 {network.observation_status === 'observed' ? `${timeOf(network.observed_at)} (${ago(network.observed_at, now)})` : network.observation_status}
             </span>
-            <button
-              type="button"
-              disabled={!hasToken || !!refresh.busy}
-              title={needToken(hasToken) ?? '실제 TCP 상태 즉시 재관측'}
-              onClick={() => refresh.exec('r', actions.refreshNetwork, (n) => `재관측 완료 · 응답 ${n.nodes.filter((x) => x.reachable).length}/${n.nodes.length}`)}
-              className="lift inline-flex h-8 items-center gap-1.5 rounded-full border border-white/10 bg-white/[0.04] px-3 text-[12.5px] text-ink-2 hover:text-ink disabled:cursor-not-allowed disabled:opacity-40"
-            >
-              <RefreshCw size={13} className={refresh.busy ? 'animate-spin' : ''} /> 재관측
-            </button>
+            {isPublicDemo() ? (
+              // 공개 데모: 재관측(POST)은 쓰기 요청이므로 버튼 대신 읽기 전용 표시만 둡니다.
+              <span className="inline-flex h-8 items-center gap-1.5 rounded-full border border-white/10 bg-white/[0.03] px-3 text-[12.5px] text-ink-3" title={PUBLIC_READONLY_HINT} data-testid="nm-readonly">
+                <Lock size={12} /> 읽기 전용
+              </span>
+            ) : (
+              <button
+                type="button"
+                disabled={!hasToken || !!refresh.busy}
+                title={needToken(hasToken) ?? '실제 TCP 상태 즉시 재관측'}
+                onClick={() => refresh.exec('r', actions.refreshNetwork, (n) => `재관측 완료 · 응답 ${n.nodes.filter((x) => x.reachable).length}/${n.nodes.length}`)}
+                className="lift inline-flex h-8 items-center gap-1.5 rounded-full border border-white/10 bg-white/[0.04] px-3 text-[12.5px] text-ink-2 hover:text-ink disabled:cursor-not-allowed disabled:opacity-40"
+              >
+                <RefreshCw size={13} className={refresh.busy ? 'animate-spin' : ''} /> 재관측
+              </button>
+            )}
           </>
         )}
         <FocusToggle on={focus} onChange={setFocus} />
@@ -133,8 +144,8 @@ function LiveNetworkMonitor({ modeSwitch, focus, setFocus }: { modeSwitch: React
   const allOffline = nodes.length > 0 && nodes.every((n) => n.status === 'offline');
 
   return (
-    <div className="flex h-full min-h-0">
-      <div className="flex min-w-0 flex-1 flex-col">
+    <div className="flex h-full min-h-0 flex-col lg:flex-row">
+      <div className="flex min-h-0 min-w-0 flex-1 flex-col">
         {/* ── 무대: 토폴로지 ── */}
         <div className="nm-stage relative min-h-0 flex-1 overflow-hidden" data-focus={focus || undefined}>
           <div style={{ top: barBottom }} className={cx('absolute transition-[left,bottom] duration-500', focus ? `inset-x-0 ${flow ? 'bottom-[130px]' : 'bottom-0'}` : 'bottom-0 left-0 right-0 xl:left-[290px]')} data-testid="nm-topology">
@@ -199,7 +210,7 @@ function LiveNetworkMonitor({ modeSwitch, focus, setFocus }: { modeSwitch: React
               title={panelOpen ? '상세 패널 접기' : '상세 패널 펼치기'}
               className="glass-float lift absolute right-4 top-1/2 z-40 flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-full text-ink-2 hover:text-ink"
             >
-              {panelOpen ? <PanelRightClose size={16} /> : <PanelRightOpen size={16} />}
+              {wide ? (panelOpen ? <PanelRightClose size={16} /> : <PanelRightOpen size={16} />) : panelOpen ? <PanelBottomClose size={16} /> : <PanelBottomOpen size={16} />}
             </button>
           )}
         </div>
@@ -219,12 +230,12 @@ function LiveNetworkMonitor({ modeSwitch, focus, setFocus }: { modeSwitch: React
         {!focus && (
           <div className="glass-chrome relative z-10 shrink-0 border-t">
             <button type="button" onClick={() => setDeckOpen(!deck)} aria-expanded={deck} className="flex w-full items-center gap-3 px-5 py-2.5 text-left transition hover:bg-white/[0.03]">
-              <span className="text-[12px] font-medium uppercase tracking-[0.14em] text-ink-3">메시지 · 시퀀스</span>
+              <span className="shrink-0 whitespace-nowrap text-[12px] font-medium uppercase tracking-[0.14em] text-ink-3"><span className="sm:hidden">메시지</span><span className="hidden sm:inline">메시지 · 시퀀스</span></span>
               <span className="truncate text-[13px] text-ink-2">{flow ? `최근 ${flow.route.join(' → ')}` : '관측된 메시지가 없습니다'}</span>
-              <span className="ml-auto flex items-center gap-1 text-[12px] text-ink-3">{flows.length}건 {deck ? <ChevronDown size={14} /> : <ChevronUp size={14} />}</span>
+              <span className="ml-auto flex shrink-0 items-center gap-1 whitespace-nowrap text-[12px] text-ink-3">{flows.length}건 {deck ? <ChevronDown size={14} /> : <ChevronUp size={14} />}</span>
             </button>
             {deck && (
-              <div className="grid h-[210px] grid-cols-[280px_1fr] divide-x divide-white/[0.07] border-t border-white/[0.06] xl:grid-cols-[360px_1fr] [@media(min-height:900px)]:h-[250px]">
+              <div className="grid h-[210px] grid-cols-1 grid-rows-2 divide-y divide-white/[0.07] border-t border-white/[0.06] sm:grid-cols-[280px_1fr] sm:grid-rows-1 sm:divide-x sm:divide-y-0 xl:grid-cols-[360px_1fr] [@media(min-height:900px)]:h-[250px]">
                 <div className="panel-scroll px-4 py-3">
                   <MessageHeader flow={null} />
                   <FlowList flows={flows} selected={flow?.messageId ?? null} onSelect={setPickedFlow} />
@@ -238,9 +249,9 @@ function LiveNetworkMonitor({ modeSwitch, focus, setFocus }: { modeSwitch: React
           </div>
         )}
       </div>
-      <div className={cx('aside-shell relative h-full shrink-0 overflow-hidden', showAside ? 'w-[320px] xl:w-[380px]' : 'w-0')} aria-hidden={!showAside}>
+      <div className={asideShellClass(showAside)} aria-hidden={!showAside} data-testid="nm-aside">
         {showAside && (
-          <aside className="glass-chrome panel-scroll h-full w-[320px] border-l xl:w-[380px]" aria-label="노드 상세">
+          <aside className={cx('glass-chrome panel-scroll', asideInnerClass())} aria-label="노드 상세">
             <NodeDetail node={focusNode} network={network} places={places} />
           </aside>
         )}

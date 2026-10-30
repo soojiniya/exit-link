@@ -1,9 +1,10 @@
-import { ArrowRight, CheckCircle2, CircleDashed, CircleHelp, Send, X, XCircle } from 'lucide-react';
+import { ArrowRight, CheckCircle2, CircleDashed, CircleHelp, Lock, Send, X, XCircle } from 'lucide-react';
 import type { Place, WsEvacuationPlan } from '@contracts';
 import { useApp } from '@/store/store';
 import { useActiveScenario, useLatestDelivery, useNetworkDerived } from '@/store/selectors';
 import { NODE_STATUS_LABEL, STATUS_COLOR, type NodeStatus } from '@/domain/network';
 import { ago, dispositionLabel, ms, reasonLabel, timeOf } from '@/domain/format';
+import { isPublicDemo } from '@/domain/mode';
 import { useNow } from './TopBar';
 import { Button, Chip, Dot, Empty, SectionLabel, SourceBadge, cx } from './primitives';
 
@@ -36,7 +37,7 @@ export function IncidentPanel({ highlightStart, onHighlightStart }: { highlightS
   const owned = selNode ? experiment?.nodes.find((n) => n.node_id === selNode.id) : null;
 
   return (
-    <aside className="glass-chrome panel-scroll relative z-10 flex h-full w-[320px] shrink-0 flex-col border-l xl:w-[380px]" aria-label="재난 및 통신 상세">
+    <aside className="glass-chrome panel-scroll relative z-10 flex h-full w-full shrink-0 flex-col border-t lg:w-[320px] lg:border-l lg:border-t-0 xl:w-[380px]" aria-label="재난 및 통신 상세">
       <div className="flex-1 px-6 py-5">
         {/* 선택한 노드 */}
         {selNode && (
@@ -80,7 +81,7 @@ export function IncidentPanel({ highlightStart, onHighlightStart }: { highlightS
             <dt className="text-ink-3">건물</dt><dd className="font-mono text-ink-2">{scenario.state.building_id}</dd>
           </dl>
         ) : (
-          <p className="mt-2 text-xs text-ink-3">상단의 제어 버튼에서 토큰을 입력한 뒤 시나리오를 생성하세요.</p>
+          <p className="mt-2 text-xs text-ink-3">{isPublicDemo() ? '공개 화면은 읽기 전용입니다. 시나리오는 로컬 실험 환경에서만 생성됩니다.' : '상단의 제어 버튼에서 토큰을 입력한 뒤 시나리오를 생성하세요.'}</p>
         )}
 
         {/* 2. 위험 구역 */}
@@ -225,12 +226,19 @@ export function IncidentPanel({ highlightStart, onHighlightStart }: { highlightS
         )}
       </div>
 
-      <div className="sticky bottom-0 flex gap-2 border-t border-white/10 bg-[#0a0f18]/90 px-6 py-4 backdrop-blur">
-        <Button variant="outline" className="flex-1" onClick={() => setControlOpen(true)}>관제 제어</Button>
-        <Button variant="primary" className="flex-1" onClick={() => setControlOpen(true)} disabled={!scenario?.plans.length}>
-          <Send size={13} /> 안내 전송
-        </Button>
-      </div>
+      {isPublicDemo() ? (
+        // 공개 데모에는 제어 패널이 없으므로 동작하지 않는 버튼 대신 읽기 전용 안내를 둡니다.
+        <div className="sticky bottom-0 flex items-center gap-2 border-t border-white/10 bg-[#0a0f18]/90 px-6 py-3 text-[12px] text-ink-3 backdrop-blur" data-testid="incident-readonly">
+          <Lock size={13} className="shrink-0" /> 읽기 전용 화면 · 관제 제어와 안내 전송은 로컬 실험 환경에서만 가능합니다
+        </div>
+      ) : (
+        <div className="sticky bottom-0 flex gap-2 border-t border-white/10 bg-[#0a0f18]/90 px-6 py-4 backdrop-blur">
+          <Button variant="outline" className="flex-1" onClick={() => setControlOpen(true)}>관제 제어</Button>
+          <Button variant="primary" className="flex-1" onClick={() => setControlOpen(true)} disabled={!scenario?.plans.length}>
+            <Send size={13} /> 안내 전송
+          </Button>
+        </div>
+      )}
     </aside>
   );
 }

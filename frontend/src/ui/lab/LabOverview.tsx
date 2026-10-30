@@ -9,6 +9,7 @@ import { loadManifest, loadReplayCase } from '@/domain/replayEngine';
 import { caseFacts, type CaseFacts } from '@/ui/overview/recordedCases';
 import { HudTile, type HudTone } from '@/ui/twin/HudTile';
 import { Chip, SourceBadge, cx } from '../primitives';
+import { isPublicDemo } from '@/domain/mode';
 import type { LabRecord, Origin, TimelineItem } from '@/store/types';
 
 /**
@@ -53,7 +54,11 @@ export function LabStatusStrip({ env }: { env: Env }) {
         tone={!experiment ? 'idle' : experiment.enabled ? 'info' : 'idle'}
         testId="lab-st-enabled"
       />
-      <HudTile label="제어 권한" value={hasToken ? '토큰 적용됨' : '미설정'} sub={hasToken ? '이 탭 메모리에만 보관' : '쓰기 요청 불가'} tone={hasToken ? 'info' : 'idle'} testId="lab-st-token" />
+      {isPublicDemo() ? (
+        <HudTile label="제어 권한" value="읽기 전용" sub="공개 화면 · 쓰기 요청 없음" tone="idle" testId="lab-st-token" />
+      ) : (
+        <HudTile label="제어 권한" value={hasToken ? '토큰 적용됨' : '미설정'} sub={hasToken ? '이 탭 메모리에만 보관' : '쓰기 요청 불가'} tone={hasToken ? 'info' : 'idle'} testId="lab-st-token" />
+      )}
       <HudTile
         label="TCP 노드"
         value={!network ? '관측 대기' : !observed ? '미관측' : allOffline ? '미실행' : `${reachable} / ${nodes.length} 응답`}
@@ -89,6 +94,20 @@ export function labSteps(e: Env): LabStep[] {
   const st = e.experiment?.status;
   const running = st === 'running';
   const records = e.labLog.length + e.timeline.length + e.deliveries;
+  if (isPublicDemo()) {
+    // 공개 데모: 쓰기 단계는 항상 비활성이며, 토큰을 요구하는 대신 읽기 전용 안내를 씁니다. 결과 단계는 실제 수신값으로 계산합니다.
+    return [
+      { key: 'env', no: '01', title: '환경 및 권한 확인', target: 'lab-sec-env', state: !e.experiment ? 'blocked' : 'idle', detail: !e.experiment ? '백엔드 연결 필요' : '공개 화면 · 읽기 전용(조회만)' },
+      { key: 'scenario', no: '02', title: '시나리오 구성', target: 'lab-sec-scenario', state: e.scenario ? 'ready' : 'blocked', detail: e.scenario ? `활성 ${e.scenario.state.scenario_id.slice(0, 8)} · rev ${e.scenario.state.revision}` : '읽기 전용 · 로컬 실험 환경에서 생성' },
+      { key: 'run', no: '03', title: '실험 실행', target: 'lab-sec-run', state: running ? 'active' : 'blocked', detail: running ? `실행 중 · 노드 ${e.experiment?.nodes.filter((n) => n.running).length ?? 0}개` : '읽기 전용 · 로컬 실험 환경에서만 실행' },
+      { key: 'control', no: '04', title: '장애 및 메시지 제어', target: 'lab-sec-control', state: 'blocked', detail: '읽기 전용 · 로컬 실험 환경에서만 가능' },
+      {
+        key: 'results', no: '05', title: '결과 및 로그 확인', target: 'lab-sec-results',
+        state: records ? 'ready' : 'idle',
+        detail: records ? `기록 ${records}건(수신 이벤트 ${e.timeline.length} · 전송 결과 ${e.deliveries})` : '저장된 실험 기록은 REPLAY에서 확인',
+      },
+    ];
+  }
   return [
     {
       key: 'env', no: '01', title: '환경 및 권한 확인', target: 'lab-sec-env',
@@ -159,7 +178,7 @@ export function EnvChecklist({ env }: { env: Env }) {
     { k: '실험 실행', v: !experiment ? '확인 불가' : experiment.enabled ? '허용됨' : '비활성화', tone: experiment?.enabled ? 'info' : 'idle' },
     { k: 'TCP 노드', v: !network ? '관측 대기' : !observed ? '미관측' : allOffline ? '미실행' : `${reachable}/${nodes.length} 응답`, tone: !observed || allOffline ? 'idle' : reachable === nodes.length ? 'ok' : 'warn' },
     { k: '활성 시나리오', v: scenario ? `rev ${scenario.state.revision}` : '없음', tone: scenario ? 'info' : 'idle' },
-    { k: '제어 권한', v: hasToken ? '토큰 적용됨' : '미설정', tone: hasToken ? 'info' : 'idle' },
+    isPublicDemo() ? { k: '제어 권한', v: '읽기 전용(공개 화면)', tone: 'idle' } : { k: '제어 권한', v: hasToken ? '토큰 적용됨' : '미설정', tone: hasToken ? 'info' : 'idle' },
   ];
   const color: Record<HudTone, string> = { ok: '#4FD39A', info: '#8FD3FF', warn: '#F2A766', fail: '#FF7A7E', idle: '#8D98AB', neutral: '#E8ECF2' };
   return (
@@ -225,7 +244,7 @@ export function PublicReadOnlyNotice({ compact = false }: { compact?: boolean })
         <div>
           <div className="text-[14px] text-ink">공개 데모는 읽기 전용입니다. 저장된 실제 TCP 실험 기록은 REPLAY에서 확인할 수 있습니다.</div>
           <div className="mt-0.5 text-[12.5px] text-ink-3">
-            이 화면은 제어 토큰을 받지 않으며 시나리오 생성·위험 구역 변경·장애 주입·안내 전송 요청을 보내지 않습니다. 실험 제어는 로컬 실험 환경에서만 가능합니다.
+            이 화면은 제어 권한 입력을 받지 않으며 시나리오 생성·위험 구역 변경·장애 주입·안내 전송 요청을 보내지 않습니다. 실험 제어는 로컬 실험 환경에서만 가능합니다.
           </div>
         </div>
       </div>
