@@ -34,8 +34,9 @@ async function run<T>(meta: Meta, fn: () => Promise<T>, summarize?: (d: T) => Pa
 }
 
 async function refreshScenario(id: string) {
+  const origin = { streamId: S().streamId };
   const sc = await call('GET /api/v1/scenarios/{scenario_id}', { path: { scenario_id: id } });
-  S().upsertScenario(sc as WsScenarioSnapshot);
+  S().upsertScenario(sc as WsScenarioSnapshot, origin);
 }
 
 const planSummary = (sc: WsScenarioSnapshot) =>
@@ -56,9 +57,10 @@ export const actions = {
     run(
       { kind: 'scenario', label, target: `${starts.join(', ')} · ${hazardText(hazards)}` },
       async () => {
+        const origin = { streamId: S().streamId };
         const sc = (await call('POST /api/v1/scenarios', { body: { starts, hazards } })) as WsScenarioSnapshot;
-        S().upsertScenario(sc);
-        S().setActiveScenario(sc.state.scenario_id);
+        S().upsertScenario(sc, origin);
+        if (S().scenarios[sc.state.scenario_id]) S().setActiveScenario(sc.state.scenario_id);
         return sc;
       },
       (sc) => ({ scenarioId: sc.state.scenario_id, summary: `rev ${sc.state.revision} · ${planSummary(sc)}` }),
@@ -68,11 +70,12 @@ export const actions = {
     run(
       { kind: 'hazard', label: '위험 구역 교체', target: hazardText(hazards), scenarioId },
       async () => {
+        const origin = { streamId: S().streamId };
         const sc = (await call('PUT /api/v1/scenarios/{scenario_id}/hazards', {
           path: { scenario_id: scenarioId },
           body: { expected_revision: expectedRevision, hazards },
         })) as WsScenarioSnapshot;
-        S().upsertScenario(sc);
+        S().upsertScenario(sc, origin);
         return sc;
       },
       (sc) => ({

@@ -165,34 +165,57 @@ class LocalCluster:
             await asyncio.sleep(0.01)
         raise TimeoutError(f"Missing real event: {node_id} {event} {message_id}")
 
+    def alive_nodes(self):
+        return [node_id for node_id, process in self.processes.items() if process.poll() is None]
+
     async def close(self):
+        # Nodes whose exit was already confirmed (and any failure already reported) by an
+        # earlier close() call are skipped, so a cleanup retry only handles what remains.
+        released = getattr(self, "released", None)
+        if released is None:
+            released = self.released = set()
+        attempt = getattr(self, "cleanup_attempts", 0)
+        self.cleanup_attempts = attempt + 1
         failures = []
         try:
             for node_id, process in self.processes.items():
+                if node_id in released and process.poll() is not None:
+                    continue
                 if process.poll() is not None:
                     injected = any(fault["pid"] == process.pid for fault in self.faults)
                     normal = process.returncode == 0 and bool(self.records(node_id, "node_stopped"))
                     if not injected and not normal:
                         failures.append({"node": node_id, "error": "Unexpected process exit without injected fault or normal shutdown"})
+                    released.add(node_id)
                     continue
-                if process.poll() is None:
-                    try:
-                        await stop_node(self.topology, node_id, timeout=3)
-                        process.wait(timeout=5)
-                        if process.returncode != 0 or not self.records(node_id, "node_stopped"):
-                            raise RuntimeError("Normal node shutdown was not confirmed")
-                    except Exception as exc:
-                        failures.append({"node": node_id, "error": str(exc)})
-                        if process.poll() is None:
+                try:
+                    await stop_node(self.topology, node_id, timeout=3)
+                    process.wait(timeout=5)
+                    if process.returncode != 0 or not self.records(node_id, "node_stopped"):
+                        raise RuntimeError("Normal node shutdown was not confirmed")
+                except Exception as exc:
+                    failures.append({"node": node_id, "error": str(exc) or type(exc).__name__})
+                    if process.poll() is None:
+                        # A forced kill that cannot be confirmed must not stop cleanup of
+                        # the remaining nodes; the node stays owned for a later retry.
+                        try:
                             process.kill()
                             process.wait(timeout=5)
+                        except Exception as kill_error:
+                            failures.append({"node": node_id, "error": "Forced kill not confirmed: "
+                                             + (str(kill_error) or type(kill_error).__name__)})
+                if process.poll() is not None:
+                    released.add(node_id)
         finally:
             for handle in self.handles:
                 handle.close()
             evidence = {"transport": "real_tcp_loopback", "topology_origin": "simulation",
                         "observation_origin": "real_process", "processes": self.history, "faults": self.faults,
-                        "cleanup_failures": failures,
+                        "cleanup_failures": failures, "cleanup_attempt": attempt + 1,
+                        "alive_after_cleanup": self.alive_nodes(),
                         "events": {entry["log"]: read_events(self.directory / entry["log"]) for entry in self.history}}
-            (self.directory / "evidence.json").write_text(json.dumps(evidence, ensure_ascii=False, indent=2), encoding="utf-8")
+            # Keep the first evidence file unchanged; retries get their own file.
+            name = "evidence.json" if attempt == 0 else f"evidence-retry-{attempt}.json"
+            (self.directory / name).write_text(json.dumps(evidence, ensure_ascii=False, indent=2), encoding="utf-8")
         if failures:
             raise RuntimeError(f"Cluster cleanup failed: {failures}")

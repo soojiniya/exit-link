@@ -6,7 +6,8 @@ import { HazardEditor } from '@/ui/lab/HazardEditor';
 import { ExperimentControl } from '@/ui/lab/ExperimentControl';
 import { GuidanceForm } from '@/ui/lab/GuidanceForm';
 import { DeliveryList, FailoverTracker, PlanResults, ScenarioList } from '@/ui/lab/Results';
-import { DisabledNotice, EnvChecklist, LabStatusStrip, LabStepper, LabTimeline, RecordedShortcuts, StepCard, labSteps, useLabEnv } from '@/ui/lab/LabOverview';
+import { DisabledNotice, EnvChecklist, LabStatusStrip, LabStepper, LabTimeline, PublicReadOnlyNotice, RecordedShortcuts, StepCard, labSteps, useLabEnv } from '@/ui/lab/LabOverview';
+import { isPublicDemo } from '@/domain/mode';
 import { SourceBadge } from '@/ui/primitives';
 
 /**
@@ -14,10 +15,13 @@ import { SourceBadge } from '@/ui/primitives';
  * 흐름: 01 환경·권한 → 02 시나리오(가상) → 03 실험 실행(실제 프로세스) → 04 장애·메시지 제어(실제 TCP) → 05 결과·기록.
  * 모든 요청은 api/actions.ts 한 곳을 거치고(기존 컴포넌트 그대로), 화면 값은 응답·WebSocket 수신값만 씁니다.
  * 실험이 비활성화된 환경에서는 조회만 가능하며, 저장된 실험 기록(REPLAY)으로 안내합니다.
+ * 공개 데모(VITE_DEMO_MODE=1)에서는 토큰 입력과 쓰기 제어를 렌더링하지 않습니다(api/client.ts도 쓰기 요청을 차단).
  */
 export default function SimulationLab() {
   const env = useLabEnv();
   const steps = labSteps(env);
+  const readOnly = isPublicDemo();
+  const locked = <PublicReadOnlyNotice compact />;
   return (
     <div className="panel-scroll h-full">
       <div className="mx-auto max-w-[1600px] space-y-8 px-6 pb-16 pt-8 md:px-8">
@@ -44,29 +48,29 @@ export default function SimulationLab() {
         {/* B. 진행 단계 */}
         <section className="space-y-3" aria-label="실험 진행 흐름">
           <LabStepper steps={steps} />
-          <DisabledNotice env={env} />
+          {readOnly ? <PublicReadOnlyNotice /> : <DisabledNotice env={env} />}
         </section>
 
         {/* C. 제어 영역 */}
         <div className="grid grid-cols-1 gap-5 xl:grid-cols-2">
           <StepCard id="lab-sec-env" no="01" title="환경 및 제어 권한" desc="쓰기 요청에는 서버의 제어 토큰이 필요합니다." right={<SourceBadge origin="CTRL" />}>
-            <TokenSection />
+            {readOnly ? locked : <TokenSection />}
             <EnvChecklist env={env} />
           </StepCard>
           <StepCard id="lab-sec-run" no="03" title="실험 실행 · TCP 노드" desc="실험 시작·장애 주입은 실제 노드 프로세스를 실행·종료합니다." right={<SourceBadge origin="CTRL" />}>
-            <ExperimentControl />
+            {readOnly ? locked : <ExperimentControl />}
           </StepCard>
           <StepCard id="lab-sec-scenario" no="02" title="시나리오 구성" desc="대피 안내 대상 위치를 고르고 시나리오를 생성합니다(가상 데이터)." right={<SourceBadge origin="SIM" />}>
             <div className="space-y-6">
-              <ScenarioCreator />
+              {readOnly ? locked : <ScenarioCreator />}
               <ScenarioList />
             </div>
           </StepCard>
           <StepCard title="위험 구역 · 통로 차단" desc="활성 시나리오의 화재·위험·차단을 지정하고 대피 경로를 재계산합니다." right={<SourceBadge origin="SIM" />}>
-            <HazardEditor />
+            {readOnly ? locked : <HazardEditor />}
           </StepCard>
           <StepCard id="lab-sec-control" no="04" title="안내 메시지 전송" desc="활성 시나리오의 경로를 실제 TCP 노드로 전송하고 ACK 로 확인합니다." right={<SourceBadge origin="LIVE" />}>
-            <GuidanceForm showAdvanced />
+            {readOnly ? locked : <GuidanceForm showAdvanced />}
           </StepCard>
           <StepCard title="대피 경로 · 대체 경로 전환" desc="경로 계산 결과와 장애 후 전환 과정(실제 수신 이벤트)." right={<SourceBadge origin="LIVE" />}>
             <div className="space-y-6">

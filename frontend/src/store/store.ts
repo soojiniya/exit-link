@@ -43,7 +43,8 @@ export interface AppState {
   applyEvent: (e: StreamEvent) => void;
   setConn: (c: ConnStatus, err?: string | null) => void;
   setBuilding: (b: BuildingView | null, err?: string | null) => void;
-  upsertScenario: (s: WsScenarioSnapshot) => void;
+  /** origin: 요청을 보낼 때의 stream_id. 지정하면 그 사이 서버가 바뀐 응답은 버립니다. */
+  upsertScenario: (s: WsScenarioSnapshot, origin?: { streamId: string | null }) => void;
   upsertDelivery: (d: Delivery) => void;
   setExperiment: (e: WsExperimentView) => void;
   setNetwork: (n: WsNetworkView) => void;
@@ -62,8 +63,25 @@ const markOf = (e: StreamEvent): ExperimentMark => {
   return { experimentId: p.experiment_id, status: p.status, at: e.timestamp, sequence: e.sequence };
 };
 
-function scenarioNewer(prev: WsScenarioSnapshot | undefined, next: WsScenarioSnapshot) {
-  return !prev || next.state.revision >= prev.state.revision;
+/**
+ * REST 응답과 WebSocket 이벤트는 도착 순서가 뒤바뀔 수 있습니다.
+ * - 더 높은 revision: 위험 구역이 바뀌어 모든 경로가 재계산된 상태이므로 통째로 교체합니다.
+ * - 더 낮은 revision: 늦게 도착한 응답이므로 무시합니다(null).
+ * - 같은 revision: 출발지 등록·안내 전송은 revision을 올리지 않으므로, 출발지별로 route_version이
+ *   더 높은(같으면 새로 받은) 경로를 남기고 어느 쪽에만 있는 출발지 경로도 지우지 않습니다.
+ *   events는 같은 revision 안에서 계속 쌓이므로 더 긴 쪽을 최신으로 봅니다.
+ */
+export function mergeScenario(prev: WsScenarioSnapshot | undefined, next: WsScenarioSnapshot): WsScenarioSnapshot | null {
+  if (!prev || next.state.revision > prev.state.revision) return next;
+  if (next.state.revision < prev.state.revision) return null;
+  const plans = [...prev.plans];
+  for (const p of next.plans) {
+    const i = plans.findIndex((x) => x.start_location === p.start_location);
+    if (i === -1) plans.push(p);
+    else if (plans[i].route_version <= p.route_version) plans[i] = p;
+  }
+  const base = next.events.length >= prev.events.length ? next : prev;
+  return { ...base, plans };
 }
 
 export const useApp = create<AppState>((set) => ({
@@ -93,6 +111,8 @@ export const useApp = create<AppState>((set) => ({
 
   replaceSnapshot: (s) =>
     set((st) => {
+      // 같은 스트림에서 이미 적용한 이벤트보다 오래된 snapshot(늦게 도착한 REST 응답)은 무시합니다.
+      if (st.streamId === s.stream_id && s.sequence < st.sequence) return {};
       const scenarios: Record<string, WsScenarioSnapshot> = {};
       for (const sc of s.scenarios) scenarios[sc.state.scenario_id] = sc;
       const scenarioOrder = s.scenarios
@@ -142,8 +162,9 @@ export const useApp = create<AppState>((set) => ({
       switch (e.type) {
         case 'scenario.changed': {
           const id = e.payload.state.scenario_id;
-          if (scenarioNewer(st.scenarios[id], e.payload)) {
-            patch.scenarios = { ...st.scenarios, [id]: e.payload };
+          const merged = mergeScenario(st.scenarios[id], e.payload);
+          if (merged) {
+            patch.scenarios = { ...st.scenarios, [id]: merged };
             if (!st.scenarioOrder.includes(id)) {
               patch.scenarioOrder = [...st.scenarioOrder, id];
               patch.activeScenarioId = id; // 새 시나리오가 생기면 그 시나리오를 보여줍니다.
@@ -200,12 +221,15 @@ export const useApp = create<AppState>((set) => ({
 
   setConn: (conn, err = null) => set({ conn, connError: err }),
   setBuilding: (building, err = null) => set({ building, buildingError: err }),
-  upsertScenario: (s) =>
+  upsertScenario: (s, origin) =>
     set((st) => {
+      // 요청을 보낸 뒤 백엔드가 재시작(stream_id 변경)했다면 이전 서버의 응답은 반영하지 않습니다.
+      if (origin && origin.streamId !== st.streamId) return {};
       const id = s.state.scenario_id;
-      if (!scenarioNewer(st.scenarios[id], s)) return {};
+      const merged = mergeScenario(st.scenarios[id], s);
+      if (!merged) return {};
       return {
-        scenarios: { ...st.scenarios, [id]: s },
+        scenarios: { ...st.scenarios, [id]: merged },
         scenarioOrder: st.scenarioOrder.includes(id) ? st.scenarioOrder : [...st.scenarioOrder, id],
       };
     }),

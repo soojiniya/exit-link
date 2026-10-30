@@ -1,4 +1,5 @@
 import type { ApiError, Operations } from '@contracts';
+import { isPublicDemo } from '@/domain/mode';
 
 /**
  * docs/contracts/stage5/types.ts의 Operations 매핑을 그대로 사용하는 REST 클라이언트.
@@ -14,7 +15,8 @@ const httpStatuses = new WeakMap<object, number>();
 export const httpStatusOf = (data: unknown): number | undefined =>
   data !== null && typeof data === 'object' ? httpStatuses.get(data) : undefined;
 export const setControlToken = (t: string | null) => {
-  controlToken = t && t.trim() ? t.trim() : null;
+  // 공개 데모는 읽기 전용입니다: 제어 토큰을 받지도, 보관하지도 않습니다.
+  controlToken = !isPublicDemo() && t && t.trim() ? t.trim() : null;
   tokenListeners.forEach((fn) => fn(controlToken !== null));
 };
 export const hasControlToken = () => controlToken !== null;
@@ -49,6 +51,7 @@ export async function call<K extends OpKey>(op: K, args: OpArgs<K> = {} as OpArg
   const headers: Record<string, string> = {};
   if (a.body !== undefined) headers['Content-Type'] = 'application/json';
   if (method !== 'GET') {
+    if (isPublicDemo()) throw new ApiRequestError(0, 'public_read_only', '공개 데모는 읽기 전용입니다. 저장된 실험 기록은 REPLAY에서 확인하세요.');
     if (!controlToken) throw new ApiRequestError(0, 'token_missing', '제어 토큰이 없어 읽기 전용입니다.');
     headers['X-Exit-Link-Token'] = controlToken;
   }
