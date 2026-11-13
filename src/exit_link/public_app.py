@@ -10,16 +10,29 @@ from exit_link.api.runtime import Backend
 from exit_link.api.security import ApiSettings
 
 
-def configured_origin() -> str:
-    origin = os.environ.get("EXIT_LINK_PUBLIC_ORIGIN", "").strip().rstrip("/")
+def _validated_origin(name: str) -> str:
+    origin = os.environ.get(name, "").strip().rstrip("/")
     parsed = urlsplit(origin)
-    if parsed.scheme != "https" or not parsed.hostname or parsed.path or parsed.query or parsed.fragment or parsed.username or parsed.password:
-        raise ValueError("Set EXIT_LINK_PUBLIC_ORIGIN to the exact HTTPS frontend origin")
+    if (parsed.scheme != "https" or not parsed.hostname or "*" in parsed.netloc
+            or parsed.path or parsed.query or parsed.fragment or parsed.username or parsed.password):
+        raise ValueError(f"Set {name} to the exact HTTPS frontend origin")
     return origin
 
 
+def configured_origin() -> str:
+    return _validated_origin("EXIT_LINK_PUBLIC_ORIGIN")
+
+
+def configured_origins() -> tuple[str, ...]:
+    production = configured_origin()
+    if not os.environ.get("EXIT_LINK_PUBLIC_PREVIEW_ORIGIN", "").strip():
+        return (production,)
+    preview = _validated_origin("EXIT_LINK_PUBLIC_PREVIEW_ORIGIN")
+    return (production, preview) if preview != production else (production,)
+
+
 def create_public_app() -> FastAPI:
-    origin = configured_origin()
+    origins = configured_origins()
     settings = ApiSettings(control_token=None, experiments_enabled=False,
                            monitor_enabled=False, persistence_enabled=False)
     backend = Backend(settings)
@@ -34,7 +47,7 @@ def create_public_app() -> FastAPI:
 
     app = FastAPI(title="EXIT-LINK Public Read-Only Demo", lifespan=lifespan)
     app.state.backend = backend
-    app.add_middleware(CORSMiddleware, allow_origins=[origin], allow_methods=["GET"],
+    app.add_middleware(CORSMiddleware, allow_origins=list(origins), allow_methods=["GET"],
                        allow_headers=["Content-Type"])
 
     @app.get("/health")
@@ -67,7 +80,7 @@ def create_public_app() -> FastAPI:
 
     @app.websocket("/ws/v1/events")
     async def events(socket: WebSocket):
-        if socket.headers.get("origin") != origin:
+        if socket.headers.get("origin") not in origins:
             await socket.close(code=1008)
             return
         await socket.accept()
