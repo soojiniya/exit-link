@@ -21,10 +21,11 @@ export default defineConfig({
     chunkSizeWarningLimit: 1600,
     rollupOptions: {
       output: {
-        manualChunks: {
-          three: ['three', '@react-three/fiber', '@react-three/drei'],
-          charts: ['recharts'],
-          flow: ['@xyflow/react'],
+        manualChunks(id) {
+          const path = id.replace(/\\/g, '/');
+          if (path.includes('/node_modules/three/') || path.includes('/node_modules/@react-three/fiber/') || path.includes('/node_modules/@react-three/drei/')) return 'three';
+          if (path.includes('/node_modules/recharts/')) return 'charts';
+          if (path.includes('/node_modules/@xyflow/react/')) return 'flow';
         },
       },
     },
