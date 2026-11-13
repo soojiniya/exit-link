@@ -49,11 +49,17 @@ def owned_processes_remain(cluster):
     """True while any owned process may still be running (unknown counts as running)."""
     alive = getattr(cluster, "alive_nodes", None)
     if callable(alive):
-        return bool(alive())
+        try:
+            return bool(alive())
+        except Exception:
+            return True
     processes = getattr(cluster, "processes", None)
     if processes is None:
         return True
-    return any(process.poll() is None for process in processes.values())
+    try:
+        return any(process.poll() is None for process in processes.values())
+    except Exception:
+        return True
 
 
 class Backend:
@@ -220,6 +226,9 @@ class Backend:
     def experiment_view(self):
         nodes = [] if self.cluster is None else [OwnedNode(node_id=node, pid=process.pid,
             running=process.poll() is None) for node, process in self.cluster.processes.items()]
+        if self.cluster is not None:
+            nodes.extend(OwnedNode(node_id=node, pid=process.pid, running=process.poll() is None)
+                         for node, process in getattr(self.cluster, "starting", {}).values())
         return self.experiment.model_copy(update={"nodes": nodes}, deep=True)
 
     def experiment_changed(self, **changes):
@@ -302,13 +311,18 @@ class Backend:
             if (process.poll() is None) == recover:
                 fail("node_state_conflict", "Node already has the requested process state", 409)
             action = self.control_intent("recover" if recover else "kill", node_id)
+            cancelled = False
             try:
                 if recover:
                     for attempt in range(3):
+                        worker = asyncio.ensure_future(asyncio.to_thread(self.cluster.start, node_id))
+                        cancelled |= await settle(worker)
                         try:
-                            await asyncio.to_thread(self.cluster.start, node_id)
+                            worker.result()
                             break
                         except NodeStartError as exc:
+                            if cancelled:
+                                raise
                             failure = exc.record["failure"]
                             # Retry only a proven bind conflict that has already cleared.
                             # Occupied/reserved endpoints and all other failures surface as 503.
@@ -318,15 +332,25 @@ class Backend:
                                 raise
                             exc.record["retry_reason"] = "address_conflict_cleared_before_retry"
                 else:
-                    action["details"]["fault"] = await asyncio.to_thread(self.cluster.kill, node_id)
-            except Exception as exc:
-                message = str(exc) or type(exc).__name__  # an empty message is still a failure
+                    worker = asyncio.ensure_future(asyncio.to_thread(self.cluster.kill, node_id))
+                    cancelled |= await settle(worker)
+                    action["details"]["fault"] = worker.result()
+            except BaseException as exc:
+                message = describe(exc)
                 self.control_completed(action, error=message, old_pid=process.pid)
                 self.experiment_changed(last_error=message)
+                if cancelled:
+                    raise asyncio.CancelledError() from exc
+                if isinstance(exc, (asyncio.CancelledError, KeyboardInterrupt, SystemExit)):
+                    raise
                 fail("node_control_failed", message, 503)
             self.experiment_changed(last_error=None)
             self.control_completed(action, old_pid=process.pid, current_pid=self.cluster.processes[node_id].pid)
-            await self.refresh_network()
+            refresh = asyncio.ensure_future(self.refresh_network())
+            cancelled |= await settle(refresh)
+            refresh.result()
+            if cancelled:
+                raise asyncio.CancelledError()
             return self.experiment_view()
 
     def reset_network(self):
@@ -345,21 +369,20 @@ class Backend:
             closing = asyncio.ensure_future(cluster.close())
             cancelled = await settle(closing)
             earlier = self.__dict__.setdefault("cleanup_errors", [])
+            task_failure = None
             try:
-                try:
-                    closing.result()
-                except Exception:
-                    # Keep the owner only while a process may still be running, so that no
-                    # new experiment starts beside it and a later stop can retry cleanup.
-                    owned = owned_processes_remain(cluster)
-                    raise
+                closing.result()
                 self.collect_logs(cluster)
                 if earlier:
                     # Every process is confirmed gone now, but an earlier attempt failed:
                     # report the experiment's cleanup as failed, never as a clean stop.
                     error = "Cleanup completed on retry after an earlier failure: " + earlier[-1]
-            except Exception as exc:
-                error = str(exc) or type(exc).__name__
+            except BaseException as exc:
+                task_failure = exc
+                # Cancellation of close itself is an unconfirmed cleanup, even if the
+                # HTTP request remains active. Retain every live owned process.
+                owned = owned_processes_remain(cluster)
+                error = describe(exc)
             finally:
                 if owned:
                     earlier.append(error)
@@ -369,7 +392,9 @@ class Backend:
                     self.reset_network()
                 self.experiment_changed(status="failed" if error is not None else "stopped", last_error=error)
                 self.control_completed(action, error=error)
-            if cancelled:
+            if isinstance(task_failure, (KeyboardInterrupt, SystemExit)):
+                raise task_failure
+            if cancelled or isinstance(task_failure, asyncio.CancelledError):
                 raise asyncio.CancelledError()
             if error is not None:
                 fail("experiment_cleanup_failed", error, 503)

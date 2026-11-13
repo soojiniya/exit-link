@@ -51,6 +51,8 @@ class LocalCluster:
         self.directory = Path(directory)
         self.directory.mkdir(parents=True, exist_ok=True)
         self.processes, self.logs, self.handles, self.history, self.faults = {}, {}, [], [], []
+        # A spawned child is owned even before it reports node_started.
+        self.starting = {}
         self.relay_delay = relay_delay
         data = load_communication().model_dump()
         reservations = []
@@ -73,6 +75,9 @@ class LocalCluster:
             raise ValueError(f"Unknown node: {node_id}")
         if node_id in self.processes and self.processes[node_id].poll() is None:
             raise RuntimeError(f"Node already running: {node_id}")
+        if any(owned_node == node_id and child.poll() is None
+               for owned_node, child in self.starting.values()):
+            raise RuntimeError(f"Node startup still owns a process: {node_id}")
         log = self.directory / f"{node_id}-{len(self.history)}.jsonl"
         handle = log.open("w", encoding="utf-8")
         self.handles.append(handle)
@@ -89,6 +94,7 @@ class LocalCluster:
                    "--guidance-state", str(self.directory / f"guidance-{node_id}.json")]
         process = subprocess.Popen(command, env=env, stdout=handle, stderr=subprocess.STDOUT,
                                    creationflags=subprocess.CREATE_NO_WINDOW if os.name == "nt" else 0)
+        self.starting[process.pid] = (node_id, process)
         record = {"node": node_id, "pid": process.pid, "log": log.name, "command": command}
         self.history.append(record)
         deadline = time.monotonic() + 15
@@ -99,9 +105,10 @@ class LocalCluster:
                     record.update(runtime_pid=start["pid"], parent_pid=start["parent_pid"])
                     if start["pid"] != process.pid or process.poll() is not None:
                         raise RuntimeError("Owned runtime PID or process readiness check failed")
-                    # Commit ownership only after successful startup. A failed child must
-                    # not replace the last owned process/log or leak on timeout.
+                    # Move a confirmed start from provisional to the active node slot.
+                    # A failed child must not replace the last owned process/log.
                     self.processes[node_id], self.logs[node_id] = process, log
+                    self.starting.pop(process.pid, None)
                     record["startup_status"] = "started"
                     return
                 if process.poll() is not None:
@@ -109,15 +116,22 @@ class LocalCluster:
                 time.sleep(0.02)
             raise TimeoutError(f"Startup timeout: {node_id}")
         except Exception as exc:
+            cleanup_error = None
             if process.poll() is None:
-                process.kill()
-                process.wait(timeout=5)
+                try:
+                    process.kill()
+                    process.wait(timeout=5)
+                except Exception as stop_error:
+                    cleanup_error = str(stop_error) or type(stop_error).__name__
+            if process.poll() is not None:
+                self.starting.pop(process.pid, None)
             failed = next((item for item in reversed(read_events(log)) if item.get("event") == "command_failed"), {})
             record["startup_status"] = "failed"
             record["failure"] = {"node": node_id, "host": config.host, "port": config.port,
                 "pid": process.pid, "exit_code": process.returncode, "reason": failed.get("reason", type(exc).__name__),
                 "errno": failed.get("errno"), "winerror": failed.get("winerror"),
-                "detail": failed.get("detail", str(exc)), "port_evidence": port_evidence(config.host, config.port)}
+                "detail": failed.get("detail", str(exc)), "port_evidence": port_evidence(config.host, config.port),
+                "cleanup_error": cleanup_error, "owned_alive": process.poll() is None}
             (self.directory / f"startup-failure-{process.pid}.json").write_text(
                 json.dumps(record, ensure_ascii=False, indent=2), encoding="utf-8")
             raise NodeStartError(node_id, record) from exc
@@ -179,7 +193,10 @@ class LocalCluster:
         raise TimeoutError(f"Missing real event: {node_id} {event} {message_id}")
 
     def alive_nodes(self):
-        return [node_id for node_id, process in self.processes.items() if process.poll() is None]
+        alive = {node_id for node_id, process in self.processes.items() if process.poll() is None}
+        alive.update(node_id for node_id, process in getattr(self, "starting", {}).values()
+                     if process.poll() is None)
+        return sorted(alive)
 
     async def close(self):
         # Processes (by PID) whose exit was already confirmed, with any failure already
@@ -191,6 +208,16 @@ class LocalCluster:
         self.cleanup_attempts = attempt + 1
         failures = []
         try:
+            for pid, (node_id, process) in list(getattr(self, "starting", {}).items()):
+                if process.poll() is None:
+                    try:
+                        process.kill()
+                        process.wait(timeout=5)
+                    except Exception as exc:
+                        failures.append({"node": node_id, "pid": pid, "kind": "kill_unconfirmed",
+                                         "error": str(exc) or type(exc).__name__})
+                if process.poll() is not None:
+                    self.starting.pop(pid, None)
             for node_id, process in self.processes.items():
                 if process.pid in released and process.poll() is not None:
                     continue

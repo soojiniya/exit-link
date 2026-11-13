@@ -40,6 +40,7 @@ class FakeCluster:
     hold_ready = False
     close_error = None
     hold_close = None
+    hold_node = False
 
     def __init__(self, directory, relay_delay=0):
         self.directory, self.relay_delay = Path(directory), relay_delay
@@ -47,6 +48,7 @@ class FakeCluster:
         self.processes, self.history = {}, []
         self.started, self.release, self.finished = threading.Event(), threading.Event(), threading.Event()
         self.ready_entered = asyncio.Event()
+        self.node_entered, self.node_release, self.node_finished = threading.Event(), threading.Event(), threading.Event()
         self.close_calls, self.close_saw_finished_start = 0, []
         FakeCluster.instances.append(self)
 
@@ -57,6 +59,22 @@ class FakeCluster:
         for node in NODES:
             self.processes[node] = FakeProcess()
         self.finished.set()
+
+    def start(self, node_id):
+        self.node_entered.set()
+        if FakeCluster.hold_node:
+            assert self.node_release.wait(5), "test did not release node start"
+        self.processes[node_id] = FakeProcess()
+        self.node_finished.set()
+
+    def kill(self, node_id):
+        self.node_entered.set()
+        if FakeCluster.hold_node:
+            assert self.node_release.wait(5), "test did not release node kill"
+        process = self.processes[node_id]
+        process.stop()
+        self.node_finished.set()
+        return {"pid": process.pid, "fault": "unit_fixture"}
 
     async def wait_ready(self):
         self.ready_entered.set()
@@ -78,6 +96,7 @@ class FakeCluster:
 def backend(tmp_path, monkeypatch):
     FakeCluster.instances, FakeCluster.hold_start, FakeCluster.hold_ready, FakeCluster.close_error = [], False, False, None
     FakeCluster.hold_close = None
+    FakeCluster.hold_node = False
     monkeypatch.setattr(runtime, "LocalCluster", FakeCluster)
     value = Backend(ApiSettings(control_token=TOKEN, experiments_enabled=True, monitor_enabled=False,
                                 persistence_enabled=False, artifact_directory=tmp_path))
@@ -101,6 +120,32 @@ def all_stopped(cluster):
 
 
 # ---------------------------------------------------------------- P1-1 -----
+
+@pytest.mark.parametrize("recover", [False, True])
+def test_cancelled_node_control_joins_worker_before_experiment_stop(backend, recover):
+    async def run():
+        await backend.start_experiment()
+        cluster = FakeCluster.instances[0]
+        if recover:
+            cluster.processes["N2"].stop()
+        FakeCluster.hold_node = True
+        control = asyncio.create_task(backend.control_node("N2", recover=recover))
+        await until(cluster.node_entered.is_set)
+        control.cancel()
+        stop = asyncio.create_task(backend.stop_experiment())
+        await asyncio.sleep(0.05)
+        assert not control.done() and not stop.done()
+        assert backend.control_lock.locked() and backend.cluster is cluster
+        assert not cluster.node_finished.is_set() and cluster.close_calls == 0
+        cluster.node_release.set()
+        with pytest.raises(asyncio.CancelledError):
+            await control
+        assert cluster.node_finished.is_set()
+        assert (await stop).status == "stopped"
+        assert cluster.close_calls == 1 and all_stopped(cluster)
+        assert backend.cluster is None and not backend.control_lock.locked()
+        assert backend.experiment.last_error is None
+    asyncio.run(run())
 
 def test_cancel_during_threaded_start_joins_thread_then_cleans_up(backend):
     async def run():
@@ -410,3 +455,114 @@ def test_review_failure_kinds_are_distinguished_and_ownership_tracked_by_pid(tmp
     evidence = json.loads((tmp_path / "evidence.json").read_text(encoding="utf-8"))
     assert evidence["alive_after_cleanup"] == ["N1"]
     assert {f["kind"] for f in evidence["cleanup_failures"]} == {"shutdown_unconfirmed", "kill_unconfirmed", "unexpected_exit"}
+
+
+def test_spawned_child_stays_owned_when_startup_and_reap_fail(tmp_path, monkeypatch):
+    """A failed readiness check cannot orphan a spawned but unreaped child."""
+    import json
+    from exit_link.simulation import processes as module
+
+    child = Proc(47001, kill_fails=True)
+    cluster = fake_local_cluster(tmp_path, monkeypatch, {})
+    cluster.path = tmp_path / "communication.json"
+    cluster.logs = {}
+    cluster.starting = {}
+    monkeypatch.setattr(module.subprocess, "Popen", lambda *args, **kwargs: child)
+    monkeypatch.setattr(module, "port_evidence", lambda *args: {"bind": {"available": False}})
+    calls = 0
+
+    def events(_path):
+        nonlocal calls
+        calls += 1
+        if calls == 1:
+            raise RuntimeError("readiness failed")
+        return []
+
+    monkeypatch.setattr(module, "read_events", events)
+    with pytest.raises(module.NodeStartError) as failure:
+        cluster.start("N1")
+    assert failure.value.record["failure"]["owned_alive"] is True
+    assert failure.value.record["failure"]["cleanup_error"]
+    assert cluster.alive_nodes() == ["N1"] and cluster.starting[child.pid][1] is child
+    assert "N1" not in cluster.processes
+    with pytest.raises(RuntimeError, match="startup still owns"):
+        cluster.start("N1")
+    with pytest.raises(module.ClusterCleanupError) as cleanup:
+        asyncio.run(cluster.close())
+    assert cleanup.value.alive == ["N1"]
+    assert (tmp_path / "evidence.json").exists()
+    child.kill_fails = False
+    asyncio.run(cluster.close())
+    assert child.poll() is not None and cluster.starting == {} and cluster.alive_nodes() == []
+    assert json.loads((tmp_path / "startup-failure-47001.json").read_text(encoding="utf-8"))["failure"]["owned_alive"]
+
+
+def test_cancelled_closing_task_preserves_live_owner_and_failed_state(backend):
+    async def run():
+        await backend.start_experiment()
+        cluster = FakeCluster.instances[0]
+        original_close = FakeCluster.close
+
+        async def cancelled_close(self):
+            self.close_calls += 1
+            raise asyncio.CancelledError()
+
+        FakeCluster.close = cancelled_close
+        try:
+            with pytest.raises(asyncio.CancelledError):
+                await backend.stop_experiment()
+            assert backend.cluster is cluster and not all_stopped(cluster)
+            assert backend.experiment.status == "failed"
+            assert "CancelledError" in backend.experiment.last_error
+            with pytest.raises(HTTPException) as blocked:
+                await backend.start_experiment()
+            assert blocked.value.detail["code"] == "experiment_exists"
+        finally:
+            FakeCluster.close = original_close
+        with pytest.raises(HTTPException) as retry:
+            await backend.stop_experiment()
+        assert retry.value.detail["code"] == "experiment_cleanup_failed"
+        assert cluster.close_calls == 2 and all_stopped(cluster) and backend.cluster is None
+
+    asyncio.run(run())
+
+
+def test_unreadable_process_liveness_is_not_treated_as_clean():
+    class UnknownOwner:
+        def alive_nodes(self):
+            raise OSError("process status unavailable")
+
+    assert runtime.owned_processes_remain(UnknownOwner()) is True
+
+
+@pytest.mark.parametrize("recover", [False, True])
+def test_cancelled_request_records_successful_node_operation(backend, recover):
+    async def run():
+        await backend.start_experiment()
+        cluster = FakeCluster.instances[0]
+        if recover:
+            cluster.processes["N2"].stop()
+        actions = []
+        original_completed = backend.control_completed
+
+        def completed(record, *args, **kwargs):
+            original_completed(record, *args, **kwargs)
+            actions.append((record["action"], record["state"], record["details"].copy()))
+
+        backend.control_completed = completed
+        FakeCluster.hold_node = True
+        control = asyncio.create_task(backend.control_node("N2", recover=recover))
+        await until(cluster.node_entered.is_set)
+        control.cancel()
+        cluster.node_release.set()
+        with pytest.raises(asyncio.CancelledError):
+            await control
+        assert cluster.node_finished.is_set()
+        assert (cluster.processes["N2"].poll() is None) == recover
+        assert actions[-1][0] == ("recover" if recover else "kill")
+        assert actions[-1][1] == "succeeded"
+        assert backend.experiment.last_error is None
+        assert not backend.control_lock.locked()
+        assert (await backend.stop_experiment()).status == "stopped"
+
+    asyncio.run(run())
