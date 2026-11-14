@@ -36,7 +36,7 @@
 
 ## 로컬 실행
 
-Windows PowerShell에서 저장소를 복제하고 **프로젝트 루트**에서 실행합니다. Python 3.12와 Node.js 20 이상을 권장합니다.
+Windows PowerShell에서 저장소를 복제하고 **프로젝트 루트**에서 실행합니다. Python 3.12와 Node.js **20.19.0 이상(20 계열) 또는 22.12.0 이상**이 필요합니다(Vite 8의 `engines`; Node 21은 지원 범위 밖입니다).
 
 ```powershell
 git clone https://github.com/soojiniya/exit-link.git
@@ -64,15 +64,17 @@ npm run dev
 
 브라우저에서 **http://127.0.0.1:5173** 에 접속합니다. 백엔드를 실행하지 않으면 LIVE 데이터·3D 레이아웃 검증 등 일부 기능이 제한될 수 있으나, 저장된 REPLAY·STORY·연구 결과 데이터는 별도로 제공됩니다.
 
-### 검증 및 빌드
+### 새 clone에서의 기본 검증 및 빌드
 
 ```powershell
-cd frontend
+./.venv/Scripts/python.exe -m pytest
+Set-Location frontend
+npm ci
 npm run verify
-npm run verify:study
-npm run verify:replay
 npm run build
 ```
+
+`npm run verify`는 타입·레이아웃·상태·공개 모드·반응형 검사이며 외부 연구 원본이 필요하지 않습니다. `verify:study`와 `verify:replay`는 별도 보관 원본과 해시를 대조하므로 새 clone만으로는 통과하지 않습니다. 원본 복원 경로·SHA-256·실행 명령은 [제출 재현성 가이드](docs/submission-reproducibility.md)에 있습니다. 실제 TCP 테스트를 포함하는 Windows 전체 검증은 `./.venv/Scripts/python.exe scripts/verify_stage5.py`이며 localhost 바인딩과 별도 결과 디렉터리를 사용합니다.
 
 백엔드 테스트 및 운영 관련 상세 절차는 [프론트엔드 가이드](frontend/README.md), [Windows 검증 보고서](docs/windows-validation-report.md), [5단계 API 가이드](docs/stage-5-api-guide.md)에 있습니다.
 
@@ -82,7 +84,7 @@ npm run build
 
 ## 공개 웹 데모 관련 안내
 
-이 저장소의 **GitHub 공개 여부와 웹 데모 배포 여부는 별개**입니다. 정적 호스팅은 저장된 REPLAY / STORY / Analytics 시연에 적합하지만, 로컬의 FastAPI·TCP 노드 실험을 자동으로 호스팅하지 않습니다. 공개 배포 시 LIVE / Simulation Lab은 백엔드 미연결 또는 읽기 전용으로 표시해야 하며, 실험 제어용 토큰을 웹 빌드에 포함해서는 안 됩니다.
+공개 Vercel 사이트는 저장된 REPLAY·CINEMATIC·연구 결과와 Render의 **읽기 전용** API를 사용합니다. LIVE TCP 노드와 Simulation Lab의 장애 제어는 로컬 실험 환경에서만 동작하며 공개 배포에서 제공하지 않습니다. 실험 제어 토큰을 웹 빌드에 포함하지 않습니다. `render.yaml`은 `public_app.py`를 실행하며, Render에서 정확한 HTTPS Origin 환경변수를 별도로 설정해야 합니다. 설정·검증 절차는 [제출 재현성 가이드](docs/submission-reproducibility.md)에 있습니다.
 
 ## 프로젝트 구조
 
