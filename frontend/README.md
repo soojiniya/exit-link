@@ -14,11 +14,11 @@ React 18 + TypeScript + Vite + Tailwind + Three.js(React Three Fiber) 기반 관
    .\.venv\Scripts\python.exe -m uvicorn exit_link.main:app --host 127.0.0.1 --port 8000 --workers 1 --no-proxy-headers --ws-max-size 4096
    ```
 
-2. 프론트엔드 실행 (별도 PowerShell, Node.js 20 이상 — `node -v`로 확인)
+2. 프론트엔드 실행 (별도 PowerShell, Node.js 20.19.0 이상인 20 계열 또는 22.12.0 이상 — `node -v`로 확인)
 
    ```powershell
-   Set-Location 'C:\Users\User\Documents\Codex\2026-10-20\exit-link-fastapi-python-tcp-socket\outputs\exit-link\frontend'
-   npm install          # 의존성이 바뀌었을 때마다 한 번
+   Set-Location frontend # 프로젝트 루트에서 실행
+   npm ci               # package-lock.json에 고정된 의존성 설치
    npm run dev          # http://127.0.0.1:5173
    ```
 
@@ -37,7 +37,7 @@ React 18 + TypeScript + Vite + Tailwind + Three.js(React Three Fiber) 기반 관
 ```powershell
 npm run typecheck       # tsc --noEmit (../docs/contracts/stage5/types.ts 포함)
 npm run build           # typecheck + vite build → dist/
-npm run verify          # typecheck + 좌표 38개 + 상태/연동 경합 회귀 검사
+npm run verify          # typecheck + layout/state/public/responsive 정적 검사
 npm run verify:state    # HTTP 상태·빠른 복구·오래된 경로·스트림 교체·계측 분류 회귀 검사
 npm run verify:layout   # building-layout.json ↔ 백엔드 building.json·communication.json 대조
 npx tsx scripts/verify-layout.ts --api http://127.0.0.1:8000   # 실행 중인 서버 응답과 대조
@@ -46,7 +46,7 @@ npx tsx scripts/verify-layout.ts --api http://127.0.0.1:8000   # 실행 중인 �
 Windows로 저장소를 옮긴 뒤에는 Linux의 node_modules를 재사용하지 말고 `npm.cmd ci`로 lockfile 의존성을 설치합니다.
 EPERM으로 차단되면 점유 프로세스/폴더 쓰기 권한을 확인하며, 이를 코드 테스트 통과로 처리하지 않습니다.
 백엔드 루트의 `scripts/verify_windows.py`가 Windows 전체 검증 결과를 별도 파일에 기록합니다.
-[Windows 검증 보고서](../docs/windows-validation-report.md), [SQLite 설계안(미구현)](../docs/sqlite-persistence-design.md)을 참고합니다.
+[Windows 검증 보고서](../docs/windows-validation-report.md), [SQLite 구현·사용 가이드](../docs/sqlite-persistence-guide.md)를 참고합니다.
 
 `verify:layout`은 위치 ID 14개, 이동 연결 15개(가정 거리 = 배치 거리, 계단은 같은 평면 위치의 층간 연결,
 선분이 벽을 지날 때는 해당 층의 문·비상구 개구부로만 통과), 통신 노드 위치 6개를 확인하고 실패 시 종료 코드 1을 돌려줍니다.
@@ -64,8 +64,8 @@ EPERM으로 차단되면 점유 프로세스/폴더 쓰기 권한을 확인하�
 
 ### 기록 범위와 "데이터 없음"
 
-Overview·Analytics는 백엔드 메모리에 있는 값만 씁니다: 전송 결과 최근 512건, 이벤트 최근 512개, 시나리오 32개.
-백엔드를 재시작하면 초기화되며 과거 실험 파일(`data/measured`)을 읽는 API는 없습니다.
+Overview·Analytics의 LIVE 영역은 백엔드 메모리 상태를 사용합니다: 전송 결과 최근 512건, 이벤트 최근 512개, 시나리오 32개.
+서버 재시작 시 이 LIVE 상태는 초기화됩니다. 로컬 백엔드에서 SQLite 저장을 활성화한 경우 과거 기록은 `GET /api/v1/history` 하위 조회 API로 별도 열람할 수 있습니다([SQLite 가이드](../docs/sqlite-persistence-guide.md)). 화면의 저장된 aligned_v3 분석은 이 이력 API가 아닌 정적 JSON을 읽습니다. 공개 Render API는 SQLite 이력과 실험 제어를 제공하지 않습니다.
 표본이 없는 지표는 0이 아니라 "데이터 없음"으로 표시합니다. 실험별 비교는 `experiment.changed` 이벤트로 실험 구간을 만들고,
 구간을 알 수 없는(보관 창 밖) 결과는 "구간 미상"으로 따로 묶습니다.
 
@@ -123,6 +123,8 @@ Analytics 맨 위의 **본 실험 결과 | Fixed vs EXIT-LINK** 구역은 최종
 npm run verify:study            # JSON ↔ 분석 CSV 전 값 대조, 해시·무결성 확인 (읽기 전용)
 npm run import:study -- --force # 분석 폴더가 바뀌었을 때만 JSON 재생성 (해시·무결성 불일치 시 중단)
 ```
+
+`verify:study`와 `verify:replay`는 Git에 없는 연구 원본이 필요합니다. 새 clone에서 기본 검사·빌드만 수행할 때는 `npm run verify`와 `npm run build`를 사용하세요. 원본 복원 위치와 해시는 [제출 재현성 가이드](../docs/submission-reproducibility.md)에 있습니다. `import:study -- --force`는 추적 파일을 다시 쓰므로 원본 대조 목적으로 실행하지 않습니다.
 
 - 변환은 값을 바꾸지 않습니다(CSV 문자열 → 숫자/null/불리언 형 변환만). 반올림은 화면 표시 단계에서만 합니다.
 - 사용 파일: `stats_overall.csv`, `stats_by_stratum.csv`, `stats_by_fault_timing.csv`, `stats_by_condition.csv`,
