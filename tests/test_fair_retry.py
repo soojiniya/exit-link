@@ -478,6 +478,44 @@ def test_design_document_is_pinned_in_the_plan(tmp_path):
         assert fixed in text
 
 
+def test_source_hash_keys_are_posix_relative_paths():
+    hashes = fair.source_hashes()
+    assert not [k for k in hashes if "\\" in k or k.startswith("/") or ":" in k]
+    for key in ("docs/fair-retry-main-study-design.md", "scripts/prepare_fair_retry.py",
+                "scripts/analyze_fair_retry.py", "src/exit_link/experiments/fair_retry.py"):
+        assert hashes[key] == hashlib.sha256((ROOT / key).read_bytes()).hexdigest()
+
+
+def test_windows_source_hash_keys_match_linux(monkeypatch):
+    """Simulates Windows: the shared study.source_hashes() returns str(Path) keys with backslashes."""
+    from pathlib import PureWindowsPath
+    linux = fair.source_hashes()
+    shared = fair.study.source_hashes()
+    windows_shared = {k.replace("/", "\\"): v for k, v in shared.items()}
+    assert any("\\" in k for k in windows_shared)
+    monkeypatch.setattr(fair.study, "source_hashes", lambda: dict(windows_shared))
+    original = fair.posix_keys
+    monkeypatch.setattr(fair, "posix_keys", lambda hashes: original(hashes, sep="\\"))
+    assert fair.source_hashes() == linux
+    # the SCRIPTS half uses Path.as_posix(), which is "/" on Windows too
+    assert PureWindowsPath("C:/repo/docs/fair-retry-main-study-design.md").relative_to("C:/repo").as_posix() \
+        == "docs/fair-retry-main-study-design.md"
+    with pytest.raises(ValueError, match="collide"):
+        original({"a\\b": "1", "a/b": "2"}, sep="\\")
+
+
+def test_plan_with_backslash_source_keys_is_rejected(tmp_path):
+    """A plan written by the old str(Path) code on Windows would not validate silently."""
+    fair.prepare(tmp_path / "run")
+    fair.validate(tmp_path / "run")  # round trip with POSIX keys
+    raw = json.loads((tmp_path / "run/plan.json").read_text(encoding="utf-8"))
+    raw["source_sha256"] = {k.replace("/", "\\"): v for k, v in raw["source_sha256"].items()}
+    raw["design_sha256"] = fair.design_hash(raw)
+    atomic_json(tmp_path / "run/plan.json", raw)
+    with pytest.raises(ValueError, match="Source/runtime changed"):
+        fair.validate(tmp_path / "run")
+
+
 def test_pre_stage_pilot_plans_stay_read_only(tmp_path):
     plan = fair.prepare(tmp_path / "old")
     raw = json.loads((tmp_path / "old/plan.json").read_text(encoding="utf-8"))

@@ -91,12 +91,20 @@ async def trial(directory, specification):
     return record
 
 
+def posix_keys(hashes, sep=os.sep):
+    """Same keys on Windows and Linux: study.source_hashes() (shared with v3, left unchanged) uses str(Path)."""
+    normalized = {key.replace(sep, "/"): value for key, value in hashes.items()}
+    if len(normalized) != len(hashes):
+        raise ValueError("Source paths collide after POSIX normalization")
+    return normalized
+
+
 def source_hashes():
-    hashes = study.source_hashes()  # all of src/exit_link plus lock files
+    hashes = posix_keys(study.source_hashes())  # all of src/exit_link plus lock files
     root = Path(__file__).resolve().parents[3]
     for name in SCRIPTS:
         path = root / name
-        hashes[str(path.relative_to(root))] = hashlib.sha256(path.read_bytes()).hexdigest()
+        hashes[path.relative_to(root).as_posix()] = hashlib.sha256(path.read_bytes()).hexdigest()
     return hashes
 
 
