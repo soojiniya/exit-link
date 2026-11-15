@@ -49,13 +49,17 @@ function useSpotlight() {
 export default function App() {
   const location = useLocation();
   const isReplay = location.pathname === '/replay';
+  const twinMode = location.pathname === '/twin' ? new URLSearchParams(location.search).get('mode') : null;
   // Static public demos must not connect to visitors' localhost TCP/API service.
   const isPublicDemo = import.meta.env.VITE_DEMO_MODE === '1';
   const hasPublicReadOnlyApi = isPublicDemo && import.meta.env.VITE_PUBLIC_READONLY_API === '1';
   useSpotlight();
   useEffect(() => {
+    if (isReplay || (isPublicDemo && !hasPublicReadOnlyApi)) return;
+    return loadBuilding();
+  }, [location.pathname, isReplay, twinMode, isPublicDemo, hasPublicReadOnlyApi]);
+  useEffect(() => {
     if (!isReplay && (!isPublicDemo || hasPublicReadOnlyApi)) {
-      loadBuilding();
       eventStream.start();
     }
     const off = onTokenChange((has) => useApp.getState().setHasToken(has));

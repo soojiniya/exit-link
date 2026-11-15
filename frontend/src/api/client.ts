@@ -38,7 +38,7 @@ export class ApiRequestError extends Error {
   }
 }
 
-export async function call<K extends OpKey>(op: K, args: OpArgs<K> = {} as OpArgs<K>): Promise<OpResponse<K>> {
+export async function call<K extends OpKey>(op: K, args: OpArgs<K> = {} as OpArgs<K>, signal?: AbortSignal): Promise<OpResponse<K>> {
   const [method, template] = (op as string).split(' ') as [string, string];
   const a = args as { path?: Record<string, string | number>; query?: Record<string, unknown>; body?: unknown };
   let url = template.replace(/\{(\w+)\}/g, (_, k: string) => encodeURIComponent(String(a.path?.[k] ?? '')));
@@ -57,7 +57,7 @@ export async function call<K extends OpKey>(op: K, args: OpArgs<K> = {} as OpArg
   }
   let res: Response;
   try {
-    res = await fetch(API_ORIGIN + url, { method, headers, body: a.body !== undefined ? JSON.stringify(a.body) : undefined });
+    res = await fetch(API_ORIGIN + url, { method, headers, body: a.body !== undefined ? JSON.stringify(a.body) : undefined, signal });
   } catch (e) {
     throw new ApiRequestError(0, 'network_error', `백엔드에 연결할 수 없습니다 (${API_ORIGIN}). ${(e as Error).message}`);
   }
