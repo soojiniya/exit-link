@@ -10,12 +10,13 @@
     "preview": "vite preview",
     "verify:layout": "tsx scripts/verify-layout.ts",
     "verify:state": "tsx scripts/verify-state.ts",
+    "verify:building-retry": "tsx scripts/verify-building-retry.ts",
     "verify:public": "tsx scripts/verify-public.ts",
     "verify:responsive": "tsx scripts/verify-responsive.ts",
     "import:study": "tsx scripts/import-study.ts",
     "verify:study": "tsx scripts/verify-study.ts",
     "verify:replay": "tsx scripts/verify-replay.ts",
-    "verify": "npm run typecheck && npm run verify:layout && npm run verify:state && npm run verify:public && npm run verify:responsive"
+    "verify": "npm run typecheck && npm run verify:layout && npm run verify:state && npm run verify:building-retry && npm run verify:public && npm run verify:responsive"
   },
   "dependencies": {
     "@fontsource/jetbrains-mono": "^5.1.0",

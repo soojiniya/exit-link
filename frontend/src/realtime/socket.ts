@@ -148,12 +148,42 @@ class EventStream {
 
 export const eventStream = new EventStream();
 
-export async function loadBuilding() {
-  const { setBuilding } = useApp.getState();
-  try {
-    setBuilding(await call('GET /api/v1/building'), null);
-  } catch (e) {
-    setBuilding(null, (e as Error).message);
-    window.setTimeout(loadBuilding, 3000);
-  }
+type BuildingLoad = { controller: AbortController | null; timer: number | null };
+let buildingLoad: BuildingLoad | null = null;
+
+/** 한 화면 세션에 한 요청·한 재시도 타이머만 허용합니다. 반환값은 effect cleanup에서 호출합니다. */
+export function loadBuilding(): () => void {
+  if (buildingLoad) stopBuildingLoad(buildingLoad);
+  const session: BuildingLoad = { controller: null, timer: null };
+  buildingLoad = session;
+
+  const attempt = async () => {
+    if (buildingLoad !== session) return;
+    const controller = new AbortController();
+    session.controller = controller;
+    try {
+      const building = await call('GET /api/v1/building', {}, controller.signal);
+      if (buildingLoad === session && !controller.signal.aborted) useApp.getState().setBuilding(building, null);
+    } catch (e) {
+      if (buildingLoad !== session || controller.signal.aborted) return;
+      useApp.getState().setBuilding(null, (e as Error).message);
+      session.timer = window.setTimeout(() => {
+        session.timer = null;
+        void attempt();
+      }, 3000);
+    } finally {
+      if (session.controller === controller) session.controller = null;
+    }
+  };
+  void attempt();
+  return () => stopBuildingLoad(session);
+}
+
+function stopBuildingLoad(session: BuildingLoad) {
+  if (buildingLoad !== session) return;
+  buildingLoad = null;
+  if (session.timer !== null) window.clearTimeout(session.timer);
+  session.timer = null;
+  session.controller?.abort();
+  session.controller = null;
 }
