@@ -214,11 +214,11 @@ function RecordedCaseCards() {
               )}
             </div>
             <div className="mt-1 text-[12px] text-ink-3">ACK {f.acked}/{f.total} · 장애 {f.faults.length ? f.faults.map((x) => x.node).join('·') : '없음'} · 재전송 {f.retries}회</div>
-            <div className="mt-3 flex items-center justify-between">
+            <div className="mt-3 flex flex-wrap items-center justify-between gap-x-3 gap-y-2">
               <Link to={`/twin?mode=cinematic&case=${f.id}`} className="inline-flex items-center gap-1.5 text-[12.5px] font-medium text-[#CFEAFF] after:absolute after:inset-0 after:rounded-2xl after:content-['']" data-testid={`study-case-${f.id}-cinematic`}>
                 <Clapperboard size={13} /> CINEMATIC
               </Link>
-              <span className="relative z-10 flex gap-1.5">
+              <span className="relative z-10 flex flex-wrap gap-1.5">
                 <Link to={`/twin?mode=replay&case=${f.id}`} className="inline-flex items-center gap-1 rounded-full border border-white/12 bg-white/[0.04] px-2.5 py-0.5 text-[11.5px] text-ink-2 hover:text-ink">3D <ArrowUpRight size={11} /></Link>
                 <Link to={`/network?mode=replay&case=${f.id}`} className="inline-flex items-center gap-1 rounded-full border border-white/12 bg-white/[0.04] px-2.5 py-0.5 text-[11.5px] text-ink-2 hover:text-ink" data-testid={`study-case-${f.id}-network`}>Network <ArrowUpRight size={11} /></Link>
               </span>

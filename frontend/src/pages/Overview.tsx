@@ -364,7 +364,7 @@ function ResearchSection() {
         desc={`과거 실험 결과입니다. 현재 실시간 운영 성능이 아니며, 백엔드 연결과 무관하게 저장된 분석 파일(${study.protocol})에서 읽습니다.`}
         tone="recorded"
         right={
-          <span className="pill h-7 border-ice/30 bg-ice/[0.07] px-3 text-2xs text-ice" title={`원본: ${study.provenance.analysis_dir}`} data-testid="ov-study-label">
+          <span className="pill h-auto min-h-7 max-w-full whitespace-normal border-ice/30 bg-ice/[0.07] px-3 py-1 text-2xs text-ice" title={`원본: ${study.provenance.analysis_dir}`} data-testid="ov-study-label">
             <Archive size={12} aria-hidden /> {study.label}
           </span>
         }
@@ -611,7 +611,7 @@ function Kpi({ label, value, sub, accent, testId }: { label: string; value: stri
       <span aria-hidden className="pointer-events-none absolute -right-10 -top-12 h-28 w-28 rounded-full opacity-25 blur-2xl" style={{ background: accent }} />
       <div className="text-[12.5px] text-ink-2">{label}</div>
       <div className="mt-1.5 font-mono text-[clamp(30px,2.6vw,40px)] font-medium leading-none tracking-[-0.03em] text-ink" style={{ textShadow: `0 0 26px ${accent}55` }} data-value>{value}</div>
-      <div className="mt-2 truncate text-[11.5px] text-ink-3" title={sub}>{sub}</div>
+      <div className="mt-2 text-[11.5px] leading-snug text-ink-3">{sub}</div>
     </div>
   );
 }
