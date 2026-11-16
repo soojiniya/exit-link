@@ -652,8 +652,8 @@ function NavCard({ to, icon, title, desc, stat, stat2, testId }: { to: string; i
       <div className="mt-5">
         <div className="text-[15px] font-semibold">{title}</div>
         <div className="mt-0.5 text-[12px] text-ink-3">{desc}</div>
-        <div className="mt-3 truncate font-mono text-[11.5px] text-ink-2" title={stat}>{stat}</div>
-        {stat2 && <div className="mt-0.5 truncate font-mono text-[11.5px] text-ink-3" title={stat2}>{stat2}</div>}
+        <div className="mt-3 break-words font-mono text-[11.5px] leading-snug text-ink-2">{stat}</div>
+        {stat2 && <div className="mt-0.5 break-words font-mono text-[11.5px] leading-snug text-ink-3">{stat2}</div>}
       </div>
     </Link>
   );

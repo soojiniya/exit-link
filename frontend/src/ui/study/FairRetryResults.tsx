@@ -351,7 +351,7 @@ function AttemptsChart() {
     <ChartCard
       title="메시지당 전송 시도 횟수"
       subtitle={`출발 노드 N1의 delivery_result 로그로 집계(route_* 이벤트와 대조). 최대 ${fair.settings.max_attempts}회 = 최초 + 재시도 ${fair.settings.max_retries}회`}
-      table={<SimpleTable head={['방식', ...keys.map(name), '확인/전체', '6초 마감 이후 종료']} rows={METHODS.map((m) => {
+      table={<SimpleTable head={['방식', ...keys.map(name), '확인/전체', `ACK 없이 ${fair.settings.client_timeout_seconds}초 이상 대기`]} rows={METHODS.map((m) => {
         const a = fair.attempts_per_message[m];
         return [F[m].short, ...keys.map((k) => a.distribution[k] ?? 0), `${a.confirmed}/${a.messages}`, a.client_deadline_missed];
       })} />}
@@ -384,7 +384,7 @@ function AttemptsChart() {
       </div>
       <p className="mt-3 flex gap-1.5 text-2xs leading-relaxed text-ink-3">
         <Info size={12} className="mt-0.5 shrink-0" aria-hidden />
-        진할수록 시도가 많습니다. Fixed + Retry는 장애 노드를 지나는 같은 경로로 재시도하므로 실패 메시지가 최대 시도까지 갑니다. 그중 {fair.attempts_per_message.fixed_retry.client_deadline_missed}건은 마지막 시도가 {fair.settings.client_timeout_seconds}초 클라이언트 마감 뒤에 끝나, 시도 횟수를 클라이언트 응답이 아니라 N1 로그로 셌습니다.
+        진할수록 시도가 많습니다. Fixed + Retry는 장애 노드를 지나는 같은 경로로 재시도하므로 실패 메시지가 최대 시도까지 갑니다. 그중 {fair.attempts_per_message.fixed_retry.client_deadline_missed}건은 ACK를 받지 못한 상태에서 클라이언트 대기 시간이 {fair.settings.client_timeout_seconds}초 이상 경과한 메시지입니다. 클라이언트 응답만으로는 이런 메시지의 시도 횟수를 알 수 없어, 시도 횟수는 모두 N1 로그로 셌습니다.
         EXIT-LINK의 0회는 살아 있는 경로가 없어 전송하지 않고 no_route로 끝난 메시지입니다.
       </p>
     </ChartCard>
