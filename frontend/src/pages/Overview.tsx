@@ -11,6 +11,7 @@ import { useAnalytics } from '@/store/useAnalytics';
 import { NODE_STATUS_LABEL, STATUS_COLOR } from '@/domain/network';
 import { ago, ms, reasonLabel, timeOf } from '@/domain/format';
 import { STRATA, pValue, pct, pctRange, pp, ppRange, rowOf, study, studyValid } from '@/domain/study';
+import { fair, fairValid } from '@/domain/fairRetry';
 import { loadManifest, loadReplayCase } from '@/domain/replayEngine';
 import { caseFacts, type CaseFacts } from '@/ui/overview/recordedCases';
 import { CH, ChartCard, Legend, SimpleTable, TipBox, axisProps } from '@/ui/charts';
@@ -25,7 +26,8 @@ import type { ConnStatus } from '@/store/types';
  * 구역을 명확히 나눕니다.
  *  A. Hero: 제품 설명 + 현재 LIVE 연결 상태(요약)
  *  B. LIVE: 실제 TCP 관측·SIM 시나리오(스토어 값만 사용, 없으면 '미실행'·'관측 기록 없음'으로 표시하고 0 을 측정값처럼 쓰지 않음)
- *  C. RECORDED: 저장된 본 실험 결과(domain/study — Analytics 와 같은 모듈·같은 행) + 저장된 재생 기록 사례(public/replay)
+ *  C. RECORDED: 초기 비교(aligned_v3) 결과(domain/study — Analytics ?study=aligned_v3 와 같은 모듈·같은 행) + 그 실행의 재생 기록 사례(public/replay).
+ *     최종 공정 비교(fair_retry_v1)는 수치를 옮기지 않고 연구명·재시도 조건과 Analytics 링크만 표시합니다.
  * LIVE API·WebSocket 동작은 바꾸지 않으며, RECORDED 구역은 정적 파일만 읽습니다(쓰기 요청 없음).
  */
 
@@ -238,7 +240,7 @@ export default function Overview() {
                   title="긴급 대피 안내 전달 결과"
                   origin="LIVE"
                   subtitle="최근 24건 전송 소요 시간(elapsed_ms), 막대 색 = 결과"
-                  right={<NavLink to="/analytics" label="Analytics" />}
+                  right={<NavLink to="/analytics?tab=live" label="LIVE Analytics" />}
                   table={<SimpleTable head={['시각', '쌍', '결과', '소요', '재시도', '적용']} rows={[...lastRows].reverse().map((r) => [timeOf(r.at), r.pair, OUTCOME[r.outcome].label, r.elapsedMs !== null ? ms(r.elapsedMs) : '—', r.retries ?? '—', r.disposition ?? '미확인'])} />}
                 >
                   <div className="h-[170px]">
@@ -309,7 +311,9 @@ export default function Overview() {
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-5">
             <NavCard to="/twin" icon={<Box size={18} />} title="Digital Twin" desc="3D 건물 · 노드 · REPLAY · CINEMATIC" stat={scenario ? `화재 ${h!.fire_locations.length} · 경로 ${plans.length - noRoute}/${plans.length}` : 'LIVE 시나리오 없음'} />
             <NavCard to="/network" icon={<Network size={18} />} title="Network Monitor" desc="토폴로지 · Heartbeat · 메시지 · REPLAY" stat={a.latestFlow ? `최근 경로 ${a.latestFlow.route.join('→')}` : '관측된 메시지 없음'} />
-            <NavCard to="/analytics" icon={<BarChart3 size={18} />} title="Analytics" desc="본 실험 조건별 결과 · LIVE 지표" stat={studyValid ? `본 실험 ${study.sample.valid_pairs}쌍 · ${study.measured_on}` : '본 실험 데이터 확인 불가'} />
+            <NavCard to="/analytics" icon={<BarChart3 size={18} />} title="Analytics" desc="저장된 연구 2개 · LIVE 지표" testId="ov-nav-analytics"
+              stat={fairValid ? `공정 비교 ${fair.protocol} · ${fair.sample.valid_blocks}블록` : '공정 비교 데이터 확인 불가'}
+              stat2={studyValid ? `초기 비교 ${study.protocol} · ${study.sample.valid_pairs}쌍` : '초기 비교 데이터 확인 불가'} />
             <NavCard to="/lab" icon={<FlaskConical size={18} />} title="Simulation Lab" desc="재난·장애 주입 · 안내 전송" stat={`실험 ${a.experiment?.status ?? '상태 없음'}`} />
             <NavCard to="/story" icon={<Presentation size={18} />} title="STORY" desc="발표용 스크롤 소개" stat="정상 → 장애 → 우회 → ACK" />
           </div>
@@ -346,6 +350,7 @@ function ResearchSection() {
     `Fixed 기준선은 장애 대상 N2를 지나는 고정 경로(N1→N2→N4)이며 재시도 ${study.settings.fixed_retries}회입니다. 단일 장애에서의 큰 차이는 우회 기능 유무를 확인한 결과에 가깝습니다.`,
     normal && noRoute ? `정상 조건(${pct(normal.fixed_rate)} → ${pct(normal.exit_link_rate)})과 경로 없음 조건(${pct(noRoute.fixed_rate)} → ${pct(noRoute.exit_link_rate)})에서는 두 방식의 차이가 없습니다.` : null,
     seqBefore ? `연속 장애 · 전송 전의 차이 ${pp(seqBefore.diff_exit_minus_fixed)}는 Holm 보정 후 p=${pValue(seqBefore.sign_test_p_holm_within_metric_8_strata)}로 통계적으로 유의하지 않습니다.` : null,
+    fairValid ? `최종 공정 비교(${fair.protocol})와는 재시도 정책과 실행이 다른 별개 연구이며 수치를 합치지 않습니다.` : null,
   ].filter((x): x is string => !!x);
 
   return (
@@ -355,20 +360,36 @@ function ResearchSection() {
       <ZoneHeader
         id="ov-research"
         kicker="Recorded · Verified Research Results"
-        title="저장된 연구 결과"
+        title={`저장된 연구 결과 · 초기 비교(${study.protocol})`}
         desc={`과거 실험 결과입니다. 현재 실시간 운영 성능이 아니며, 백엔드 연결과 무관하게 저장된 분석 파일(${study.protocol})에서 읽습니다.`}
         tone="recorded"
         right={
-          <span className="pill h-7 border-ice/30 bg-ice/[0.07] px-3 text-2xs text-ice" title={`원본: ${study.provenance.analysis_dir}`} data-testid="ov-study-label">
+          <span className="pill h-auto min-h-7 max-w-full whitespace-normal border-ice/30 bg-ice/[0.07] px-3 py-1 text-2xs text-ice" title={`원본: ${study.provenance.analysis_dir}`} data-testid="ov-study-label">
             <Archive size={12} aria-hidden /> {study.label}
           </span>
         }
       />
 
+      {/* 연구 구분: 이 구역 수치는 aligned_v3. 최종 공정 비교는 링크로만 안내(수치를 옮기지 않음) */}
+      <div className="glass-inset relative flex flex-col gap-3 rounded-2xl px-4 py-3 md:flex-row md:items-center md:justify-between" data-testid="ov-study-scope">
+        <p className="flex gap-1.5 text-[13px] leading-relaxed text-ink-2">
+          <Info size={14} className="mt-0.5 shrink-0 text-ink-3" aria-hidden />
+          <span>
+            이 수치는 <b className="font-medium text-ink">초기 비교({study.protocol})</b>입니다. Fixed 재시도 {study.settings.fixed_retries}회·Heartbeat 없음, EXIT-LINK 최대 재시도 {study.settings.exit_link_max_retries}회로 재시도 조건이 달랐습니다.
+            {fairValid && <> 재시도 예산을 같게 맞춘 <b className="font-medium text-ink">최종 공정 비교({fair.protocol} · {fair.sample.cells_planned}셀)</b>는 Analytics에서 확인하세요.</>}
+          </span>
+        </p>
+        {fairValid && (
+          <Link to="/analytics" className="lift inline-flex shrink-0 items-center gap-1 self-start rounded-full border border-ice/30 bg-ice/[0.07] px-3 py-1 text-[12px] text-ice hover:text-ink md:self-auto" data-testid="ov-link-fair">
+            최종 공정 비교 보기 <ArrowUpRight size={12} />
+          </Link>
+        )}
+      </div>
+
       <div className="relative grid grid-cols-1 gap-5 xl:grid-cols-[1fr_1.25fr]">
         {/* 핵심 수치 */}
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-3 xl:grid-cols-1">
-          <Kpi accent={METHOD.fixed.color} label={`${METHOD.fixed.label} 전달 성공률`} value={pct(d.fixed_rate)} sub={`${d.fixed_success}/${d.fixed_n} 메시지 · 95% CI ${pctRange(d.fixed_ci_low, d.fixed_ci_high)}`} testId="ov-kpi-fixed" />
+          <Kpi accent={METHOD.fixed.color} label={`${METHOD.fixed.label}(재시도 ${study.settings.fixed_retries}회) 전달 성공률`} value={pct(d.fixed_rate)} sub={`${d.fixed_success}/${d.fixed_n} 메시지 · 95% CI ${pctRange(d.fixed_ci_low, d.fixed_ci_high)}`} testId="ov-kpi-fixed" />
           <Kpi accent={METHOD.exit.color} label={`${METHOD.exit.label} 전달 성공률`} value={pct(d.exit_link_rate)} sub={`${d.exit_link_success}/${d.exit_link_n} 메시지 · 95% CI ${pctRange(d.exit_link_ci_low, d.exit_link_ci_high)}`} testId="ov-kpi-exit" />
           <Kpi accent="#A9C7FF" label="성공률 차이 (EXIT-LINK − Fixed)" value={pp(d.diff_exit_minus_fixed)} sub={`95% CI ${ppRange(d.diff_ci_low, d.diff_ci_high)} · 대응 쌍 bootstrap`} testId="ov-kpi-diff" />
         </div>
@@ -407,8 +428,8 @@ function ResearchSection() {
               차이 <span className="font-mono text-[18px] text-[#CFE0FF]">{pp(d.diff_exit_minus_fixed)}</span>
               <span className="ml-2 text-ink-3">EXIT-LINK 우세 {d.pairs_exit_better}쌍 · Fixed 우세 {d.pairs_fixed_better}쌍 · 동일 {d.pairs_tied}쌍</span>
             </div>
-            <Link to="/analytics" className="lift inline-flex items-center gap-1 rounded-full border border-white/12 bg-white/[0.04] px-3 py-1 text-[12px] text-ink-2 hover:text-ink">
-              조건별 결과 · Analytics <ArrowUpRight size={12} />
+            <Link to="/analytics?study=aligned_v3" className="lift inline-flex items-center gap-1 rounded-full border border-white/12 bg-white/[0.04] px-3 py-1 text-[12px] text-ink-2 hover:text-ink" data-testid="ov-link-v3">
+              조건별 결과 · Analytics({study.protocol}) <ArrowUpRight size={12} />
             </Link>
           </div>
           <p className="mt-2 text-[11.5px] leading-relaxed text-ink-3">가로선은 95% 신뢰구간(대응 쌍 bootstrap). 분모는 실패를 포함한 방식별 전체 메시지입니다. 시간 추세가 아닌 전체 표본의 단일 비교입니다.</p>
@@ -464,7 +485,7 @@ function RecordedCases() {
         id="ov-cases"
         kicker="Recorded Experiments"
         title="저장된 실험 기록"
-        desc="본 실험의 실제 TCP 기록 3건입니다. 카드를 누르면 해당 사례가 선택된 CINEMATIC 화면으로 이동합니다. 메시지 이동은 시각적 보간이며 사람의 대피 동선이 아닙니다."
+        desc={`초기 비교(${study.protocol}) 실행의 실제 TCP 기록 3건입니다(Fixed 재시도 ${study.settings.fixed_retries}회 조건). 최종 공정 비교(${fair.protocol})의 기록이 아닙니다. 카드를 누르면 해당 사례가 선택된 CINEMATIC 화면으로 이동합니다. 메시지 이동은 시각적 보간이며 사람의 대피 동선이 아닙니다.`}
         tone="recorded"
       />
       {problem && <div role="alert" className="rounded-2xl border border-[#E9954A]/40 bg-[#E9954A]/[0.06] px-4 py-3 text-[13px] text-[#F6C79A]">저장된 실험 기록을 불러오지 못했습니다: {problem}</div>}
@@ -590,7 +611,7 @@ function Kpi({ label, value, sub, accent, testId }: { label: string; value: stri
       <span aria-hidden className="pointer-events-none absolute -right-10 -top-12 h-28 w-28 rounded-full opacity-25 blur-2xl" style={{ background: accent }} />
       <div className="text-[12.5px] text-ink-2">{label}</div>
       <div className="mt-1.5 font-mono text-[clamp(30px,2.6vw,40px)] font-medium leading-none tracking-[-0.03em] text-ink" style={{ textShadow: `0 0 26px ${accent}55` }} data-value>{value}</div>
-      <div className="mt-2 truncate text-[11.5px] text-ink-3" title={sub}>{sub}</div>
+      <div className="mt-2 text-[11.5px] leading-snug text-ink-3">{sub}</div>
     </div>
   );
 }
@@ -621,9 +642,9 @@ function NavLink({ to, label }: { to: string; label: string }) {
   );
 }
 
-function NavCard({ to, icon, title, desc, stat }: { to: string; icon: ReactNode; title: string; desc: string; stat: string }) {
+function NavCard({ to, icon, title, desc, stat, stat2, testId }: { to: string; icon: ReactNode; title: string; desc: string; stat: string; stat2?: string; testId?: string }) {
   return (
-    <Link to={to} className="glass spotlight lift group flex flex-col justify-between rounded-[20px] p-5 hover:border-action/45">
+    <Link to={to} className="glass spotlight lift group flex flex-col justify-between rounded-[20px] p-5 hover:border-action/45" data-testid={testId}>
       <div className="flex items-center justify-between text-ink-2 group-hover:text-action">
         <span className="flex h-10 w-10 items-center justify-center rounded-xl border border-white/10 bg-gradient-to-b from-white/[0.10] to-white/[0.02] shadow-[inset_0_1px_0_rgba(255,255,255,0.12)]">{icon}</span>
         <ArrowUpRight size={15} className="transition-transform group-hover:-translate-y-0.5 group-hover:translate-x-0.5" />
@@ -631,7 +652,8 @@ function NavCard({ to, icon, title, desc, stat }: { to: string; icon: ReactNode;
       <div className="mt-5">
         <div className="text-[15px] font-semibold">{title}</div>
         <div className="mt-0.5 text-[12px] text-ink-3">{desc}</div>
-        <div className="mt-3 truncate font-mono text-[11.5px] text-ink-2">{stat}</div>
+        <div className="mt-3 break-words font-mono text-[11.5px] leading-snug text-ink-2">{stat}</div>
+        {stat2 && <div className="mt-0.5 break-words font-mono text-[11.5px] leading-snug text-ink-3">{stat2}</div>}
       </div>
     </Link>
   );

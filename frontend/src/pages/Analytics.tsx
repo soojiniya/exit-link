@@ -9,7 +9,15 @@ import { CH, ChartCard, Legend, NoData, SimpleTable, StatTile, TipBox, axisProps
 import { RetentionNotice } from '@/ui/RetentionNotice';
 import { SourceBadge } from '@/ui/primitives';
 import { Accordion, StudyResults } from '@/ui/study/StudyResults';
+import { FairRetryResults } from '@/ui/study/FairRetryResults';
+import { study } from '@/domain/study';
+import { fair } from '@/domain/fairRetry';
 import { cx } from '@/ui/primitives';
+
+/** RECORDED STUDY 안의 저장된 연구 두 개. 서로 다른 실행이며 수치를 합치지 않습니다. */
+type StudyKey = 'fair_retry_v1' | 'aligned_v3';
+const DEFAULT_STUDY: StudyKey = 'fair_retry_v1';
+const isStudy = (v: string | null): v is StudyKey => v === 'fair_retry_v1' || v === 'aligned_v3';
 
 const OUTCOME: Record<DeliveryRow['outcome'], { label: string; color: string }> = {
   ack: { label: 'ACK 수신·성공', color: CH.good },
@@ -51,8 +59,40 @@ export default function Analytics() {
             </button>
           </div>
         </header>
-        <div key={tab} className="page-enter">{tab === 'recorded' ? <StudyResults /> : <LiveAnalytics />}</div>
+        <div key={tab} className="page-enter">{tab === 'recorded' ? <RecordedStudies /> : <LiveAnalytics />}</div>
       </div>
+    </div>
+  );
+}
+
+/**
+ * RECORDED STUDY: 저장된 연구 선택(?study=fair_retry_v1 | aligned_v3, 기본 fair_retry_v1).
+ * 두 연구의 재시도 정책·실행이 다르다는 점을 전환 바로 아래에 항상 표시합니다. LIVE 탭은 이 값을 읽지 않습니다.
+ */
+function RecordedStudies() {
+  const [params, setParams] = useSearchParams();
+  const raw = params.get('study');
+  const current: StudyKey = isStudy(raw) ? raw : DEFAULT_STUDY;
+  const pick = (k: StudyKey) => setParams(k === DEFAULT_STUDY ? {} : { study: k }, { replace: true });
+  const v3 = study.settings;
+  const fs = fair.settings;
+  const notes: Record<StudyKey, string> = {
+    fair_retry_v1: `공정 비교: Fixed + Retry와 EXIT-LINK 모두 최대 ${fs.max_attempts}회 시도(재시도 ${fs.max_retries}회)와 같은 시간 예산. 남은 차이는 경로 정책과 Heartbeat. 사전 등록 분석 · ${fair.sample.cells_planned}셀 · ${fair.measured_on} 측정.`,
+    aligned_v3: `초기 비교: Fixed는 재시도 ${v3.fixed_retries}회·Heartbeat 없음, EXIT-LINK는 최대 재시도 ${v3.exit_link_max_retries}회로 재시도 조건이 달랐습니다. 차이 전체를 자동 우회만의 효과로 해석하면 안 됩니다. ${study.measured_on} 측정.`,
+  };
+  return (
+    <div className="space-y-5">
+      <div className="glass-inset flex flex-col gap-3 rounded-2xl px-4 py-3 md:flex-row md:items-center md:justify-between" data-testid="study-switch">
+        <div role="tablist" aria-label="저장된 연구 선택" className="seg self-start">
+          <button role="tab" aria-selected={current === 'fair_retry_v1'} onClick={() => pick('fair_retry_v1')} data-testid="study-fair">공정 비교 · fair_retry_v1</button>
+          <button role="tab" aria-selected={current === 'aligned_v3'} onClick={() => pick('aligned_v3')} data-testid="study-v3">초기 비교 · aligned_v3</button>
+        </div>
+        <p className="flex gap-1.5 text-[12.5px] leading-relaxed text-ink-3 md:max-w-[80ch]" data-testid="study-note">
+          <Info size={13} className="mt-0.5 shrink-0" aria-hidden />
+          <span>{notes[current]} 두 연구는 별개 실행이며 수치를 합치지 않습니다.</span>
+        </p>
+      </div>
+      <div key={current} className="page-enter">{current === 'fair_retry_v1' ? <FairRetryResults /> : <StudyResults />}</div>
     </div>
   );
 }

@@ -74,6 +74,21 @@ check(Object.is(raw.fixed_success, 210) && Object.is(raw.fixed_n, 714) && Object
   check(/from '@\/ui\/study\/caveats'/.test(st) && /from '@\/ui\/study\/caveats'/.test(an), 'STORY·Analytics 주의사항 공용 모듈(caveats.ts)');
 }
 
+// 연구 구분(fair_retry_v1 추가 이후): aligned_v3 수치 옆 링크는 ?study=aligned_v3, 최종 공정 비교는 /analytics, LIVE 차트는 ?tab=live
+{
+  const ov = readFileSync(new URL('../src/pages/Overview.tsx', import.meta.url), 'utf8');
+  const st = readFileSync(new URL('../src/pages/Story.tsx', import.meta.url), 'utf8');
+  check(/to="\/analytics\?study=aligned_v3"[^>]*data-testid="ov-link-v3"/.test(ov), 'Overview: aligned_v3 수치 옆 링크 = /analytics?study=aligned_v3');
+  check(/to="\/analytics"[^>]*data-testid="ov-link-fair"/.test(ov), 'Overview: 최종 공정 비교 링크 = /analytics');
+  check(/<NavLink to="\/analytics\?tab=live"/.test(ov) && !/<NavLink to="\/analytics" /.test(ov), 'Overview: LIVE 차트 링크 = /analytics?tab=live');
+  check(/초기 비교\(\$\{study\.protocol\}\)/.test(ov) && /재시도 \$\{study\.settings\.fixed_retries\}회/.test(ov), 'Overview: 연구명·Fixed 재시도 조건 표시');
+  check(/to="\/analytics\?study=aligned_v3"[^>]*data-testid="story-analytics"/.test(st) && /to="\/analytics"[^>]*data-testid="story-analytics-fair"/.test(st), 'STORY: aligned_v3 · 공정 비교 링크 분리');
+  check(/data-testid="story-study-chip"/.test(st) && /재시도 \$\{study\.settings\.fixed_retries\}회/.test(st), 'STORY: 연구명·Fixed 재시도 조건 표시');
+  for (const [name, code] of [['Overview', ov], ['STORY', st]] as const) {
+    check(!/fairRow\(|fair\.stats|fair\.primary/.test(code), `${name}: fair_retry_v1 수치를 옮겨 쓰지 않음(연구명·링크만)`);
+  }
+}
+
 if (problems.length) {
   console.error(`FAIL ${problems.length}/${checks}`);
   problems.slice(0, 40).forEach((p) => console.error(' -', p));
