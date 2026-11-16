@@ -16,12 +16,12 @@ import { caveatItems } from '@/ui/study/caveats';
  * 방식 색: Fixed #C86A9A(모브), EXIT-LINK CH.good #4A8FE0(블루). 색만으로 구분하지 않도록 라벨·수치·범례·표를 함께 둡니다.
  * 배치 순서(이야기 흐름): 01 문제 → 02 두 방식 → 03 전체 성공률 → 04 조건별 → 05 비용 → 06 개선이 제한적인 조건 → 07 해석 범위.
  */
-const M = {
+export const M = {
   fixed: { label: 'Fixed (고정 경로)', short: 'Fixed', color: '#C86A9A' },
   exit_link: { label: 'EXIT-LINK (자동 재라우팅)', short: 'EXIT-LINK', color: CH.good },
 } as const;
-const LABEL_FILL = '#A3A9B1';
-const nf = (v: number) => v.toLocaleString('en-US', { maximumFractionDigits: 0 });
+export const LABEL_FILL = '#A3A9B1';
+export const nf = (v: number) => v.toLocaleString('en-US', { maximumFractionDigits: 0 });
 
 export function StudyResults() {
   if (!studyValid) {
@@ -231,7 +231,7 @@ function RecordedCaseCards() {
 }
 
 // ── 조각 ───────────────────────────────────────────────────
-function Chapter({ no, title, kicker, children }: { no: string; title: string; kicker: string; children: ReactNode }) {
+export function Chapter({ no, title, kicker, children }: { no: string; title: string; kicker: string; children: ReactNode }) {
   return (
     <section className="study-chapter" aria-label={title}>
       <div className="mb-5 flex items-baseline gap-4 border-b border-white/[0.07] pb-3">
@@ -244,7 +244,7 @@ function Chapter({ no, title, kicker, children }: { no: string; title: string; k
   );
 }
 
-function Kpi({ label, value, n, sub, accent, diff, testId }: { label: string; value: string; n: string; sub: string; accent: string; diff?: boolean; testId?: string }) {
+export function Kpi({ label, value, n, sub, accent, diff, testId }: { label: string; value: string; n: string; sub: string; accent: string; diff?: boolean; testId?: string }) {
   return (
     <div className={cx('glass relative overflow-hidden rounded-2xl px-5 py-5', diff && 'bg-[#A9C7FF]/[0.04]')} style={{ borderColor: `${accent}45` }} data-testid={testId}>
       <span aria-hidden className="pointer-events-none absolute inset-x-5 top-0 h-px" style={{ background: `linear-gradient(90deg, transparent, ${accent}, transparent)` }} />
@@ -260,7 +260,7 @@ function Kpi({ label, value, n, sub, accent, diff, testId }: { label: string; va
   );
 }
 
-function Def({ k, v, sub }: { k: string; v: string; sub?: string }) {
+export function Def({ k, v, sub }: { k: string; v: string; sub?: string }) {
   return (
     <div className="min-w-0">
       <dt className="text-[11.5px] text-ink-3">{k}</dt>
@@ -270,7 +270,7 @@ function Def({ k, v, sub }: { k: string; v: string; sub?: string }) {
   );
 }
 
-function MethodCard({ color, name, sub, items }: { color: string; name: string; sub: string; items: string[] }) {
+export function MethodCard({ color, name, sub, items }: { color: string; name: string; sub: string; items: string[] }) {
   return (
     <div className="glass rounded-2xl p-5" style={{ borderColor: `${color}40` }}>
       <div className="flex items-center gap-2">
@@ -285,7 +285,7 @@ function MethodCard({ color, name, sub, items }: { color: string; name: string; 
   );
 }
 
-function MiniStat({ label, value, sub }: { label: string; value: string; sub: string }) {
+export function MiniStat({ label, value, sub }: { label: string; value: string; sub: string }) {
   return (
     <div className="glass rounded-2xl px-4 py-3.5">
       <div className="text-[12px] text-ink-3">{label}</div>
@@ -310,7 +310,7 @@ export function Accordion({ title, children, testId, defaultOpen = false }: { ti
 }
 
 /** 막대 + 95% CI 가로선(값은 항상 글자로도 표시) */
-function CiBar({ rate, lo, hi, color, label, n, big }: { rate: number; lo: number; hi: number; color: string; label: string; n: string; big?: boolean }) {
+export function CiBar({ rate, lo, hi, color, label, n, big }: { rate: number; lo: number; hi: number; color: string; label: string; n: string; big?: boolean }) {
   return (
     <div className="group relative" aria-label={`${label} ${pct(rate)} (${n}), 95% CI ${pctRange(lo, hi)}`} role="img" tabIndex={0}>
       <div className={cx('relative rounded-lg bg-white/[0.05] shadow-[inset_0_1px_2px_rgba(0,0,0,0.5)]', big ? 'h-9' : 'h-4')}>
@@ -485,11 +485,11 @@ function Caveats() {
   );
 }
 
-type LabelProps = { x?: number | string; y?: number | string; width?: number | string; height?: number | string; value?: number | string };
+export type LabelProps = { x?: number | string; y?: number | string; width?: number | string; height?: number | string; value?: number | string };
 const num = (v: unknown) => Number(v ?? 0);
 
 /** 가로 막대 값 라벨: 신뢰구간 오른쪽 끝 뒤에 둡니다. */
-function RightOfCi({ x, y, width, height, value, err }: LabelProps & { err: number }) {
+export function RightOfCi({ x, y, width, height, value, err }: LabelProps & { err: number }) {
   const v = num(value);
   const scale = v > 0 ? num(width) / v : 0;
   return (
