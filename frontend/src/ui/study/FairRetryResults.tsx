@@ -7,7 +7,7 @@ import { STRATA, pValue, pct, pctRange, pp, ppRange, zeroWidth } from '@/domain/
 import { allOrNothing, fair, fairClass, fairRow, fairValid, type FairClass, type FairMethod, type FairRow } from '@/domain/fairRetry';
 import { cx } from '@/ui/primitives';
 import { useMediaQuery } from '@/ui/useMediaQuery';
-import { Accordion, Chapter, CiBar, Def, Kpi, M, MethodCard, MiniStat, RightOfCi, nf, type LabelProps } from '@/ui/study/StudyResults';
+import { Accordion, Chapter, CiBar, Def, Kpi, M, MethodCard, RightOfCi, nf, type LabelProps } from '@/ui/study/StudyResults';
 import { fairCaveatItems } from '@/ui/study/fairRetryCaveats';
 
 /**
@@ -396,16 +396,25 @@ function AckLatency() {
   const fixedOk = STRATA.filter((x) => (fairRow(x.scope, 'delivered')?.fixed_retry_success ?? 0) > 0).map((x) => x.label);
   return (
     <ChartCard title="ACK 지연 (조건부 지표)" subtitle="ACK를 받은 메시지만으로 계산한 클라이언트 왕복 시간 · 실패 메시지는 제외하며 대체값 없음">
-      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2" data-testid="fair-latency">
-        {METHODS.map((m) => {
-          const l = fair.ack_latency[m];
-          return <MiniStat key={m} label={`${F[m].short} · 중앙값 / p95`} value={l.median_ms !== null ? `${ms(l.median_ms)} / ${ms(l.p95_ms)}` : '계산 불가'} sub={`ACK ${l.ack_n}/${l.total_n} 메시지에서 계산`} />;
-        })}
-      </div>
-      <p className="mt-3 flex gap-1.5 text-2xs leading-relaxed text-ink-3">
+      {/* 2열 배치(2xl)에서는 옆 Heartbeat 카드와 높이가 같아지므로, 타일을 세로로 쌓고 남는 높이를 타일이 나눠 가져 빈 여백을 없앱니다. */}
+      <div className="flex h-full flex-col">
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 2xl:flex-1 2xl:grid-cols-1" data-testid="fair-latency">
+          {METHODS.map((m) => {
+            const l = fair.ack_latency[m];
+            return (
+              <div key={m} className="glass flex flex-col justify-center rounded-2xl px-4 py-3.5">
+                <div className="text-[12px] text-ink-3">{`${F[m].short} · 중앙값 / p95`}</div>
+                <div className="mt-1.5 font-mono text-[22px] leading-tight text-ink">{l.median_ms !== null ? `${ms(l.median_ms)} / ${ms(l.p95_ms)}` : '계산 불가'}</div>
+                <div className="mt-1 text-[11.5px] leading-snug text-ink-3">{`ACK ${l.ack_n}/${l.total_n} 메시지에서 계산`}</div>
+              </div>
+            );
+          })}
+        </div>
+        <p className="mt-3 flex gap-1.5 text-2xs leading-relaxed text-ink-3">
         <Info size={12} className="mt-0.5 shrink-0" aria-hidden />
         성공 메시지에 한정된 값입니다. Fixed + Retry의 성공은 {fixedOk.join(', ')} 조건에서만 나왔고, EXIT-LINK의 성공에는 장애를 우회한 메시지가 포함됩니다. 두 집합이 달라 지연을 같은 메시지끼리 비교한 값이 아니며, 우열 판단에 쓰지 않습니다. 조건별 지연은 분석 산출물에 없어 표시하지 않습니다.
-      </p>
+        </p>
+      </div>
     </ChartCard>
   );
 }

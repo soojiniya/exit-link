@@ -6,6 +6,7 @@ import { chaptersOf } from '@/ui/replay/useTwinReplay';
 import { TWIN_REPLAY_NOTICE } from '@/ui/replay/TwinReplayPanels';
 import { pct, pctRange, pp, ppRange, rowOf, study, studyValid } from '@/domain/study';
 import { caveatItems } from '@/ui/study/caveats';
+import { fair, fairValid } from '@/domain/fairRetry';
 import { StoryNetwork } from '@/ui/story/StoryNetwork';
 import { ackOrder, reroutedMessage, routeBeforeChange, sceneBeats, sceneTime, sceneWindows, type SceneKey, type SceneWindow } from '@/ui/story/storyScenes';
 import { useSceneProgress, useStoryMode } from '@/ui/story/useSceneProgress';
@@ -15,7 +16,8 @@ import { useSceneProgress, useStoryMode } from '@/ui/story/useSceneProgress';
  * 장면 01~04: 긴 섹션 안의 고정 화면에서, 스크롤 진행도를 그 장면 사례의 기록 구간 [t0, t1] 에 선형으로 대응시킵니다(storyScenes.sceneTime).
  *   네트워크 상태는 공통 REPLAY 엔진이 기록 시각 t 로 계산한 값이므로, 스크롤을 거꾸로 하거나 빠르게 해도 같은 t 면 같은 화면입니다.
  *   스크롤은 '기록 탐색' 수단일 뿐 기록 시각·측정값·이벤트 순서는 바꾸지 않습니다. 장면 = 사례 1개(사례를 섞지 않음).
- * 장면 05: 저장된 본 실험 결과(domain/study) + t000 사례(통계 표본 아님).
+ * 장면 05: 저장된 초기 비교(aligned_v3) 결과(domain/study) + t000 사례(통계 표본 아님).
+ *   최종 공정 비교(fair_retry_v1)는 수치를 옮기지 않고 연구명과 Analytics 링크로만 안내합니다.
  * 움직임 줄이기 · 휴대폰 폭: 고정 화면 없이 장면마다 핵심 시점의 정적 상태와 전체 이야기 줄을 보여 줍니다.
  * 백엔드·WebSocket·스토어를 쓰지 않습니다. 문장에 측정값을 직접 쓰지 않고 기록에서 읽습니다.
  */
@@ -170,7 +172,7 @@ export default function Story() {
           <div className="eyebrow reveal">EXIT-LINK · 저장된 TCP 실험 기록</div>
           <h1 style={{ ['--i' as string]: 1 }} className="display-xl reveal mt-6 text-[clamp(40px,4.4vw,84px)] text-ink [word-break:keep-all]" data-testid="story-hero-title">경로가 끊겨도,<br /><span className="text-sheen font-light">전달은 계속된다.</span></h1>
           <p style={{ ['--i' as string]: 2 }} className="reveal mt-8 max-w-[52ch] text-[17px] leading-relaxed text-ink-2">
-            건물 안 6개 통신 노드가 실제 TCP 로 주고받은 기록을 그대로 따라갑니다. 정상 전달, 노드 장애, 우회, 그리고 ACK 까지 — 모든 시각과 경로는 실험 로그에서 읽었습니다.
+            건물 안 6개 통신 노드가 실제 TCP 로 주고받은 기록을 그대로 따라갑니다. 정상 전달, 노드 장애, 우회, 그리고 ACK 까지 — 모든 시각과 경로는 실험 로그에서 읽었습니다. 사례는 초기 비교({study.protocol}) 실행의 기록입니다.
           </p>
           {problem && <p role="alert" className="mt-6 text-[14px] text-[#F6C79A]">기록을 불러오지 못했습니다: {problem}</p>}
           <button type="button" onClick={() => go(0)} style={{ ['--i' as string]: 3 }} className="reveal mt-12 inline-flex w-fit items-center gap-2 text-[13px] uppercase tracking-[0.2em] text-ink-3 hover:text-ink">
@@ -463,8 +465,11 @@ function CompareScene({ t000, still }: { t000?: ReplayCase; still: boolean }) {
       ) : (
         <div className="mt-10 grid gap-12 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
           <div>
+            <div className="reveal mb-6 inline-flex flex-wrap items-center gap-x-2 gap-y-1 rounded-full border border-ice/30 bg-ice/[0.07] px-3 py-1 text-[12px] text-ice" style={{ ['--i' as string]: 2 }} data-testid="story-study-chip">
+              초기 비교 · {study.protocol} · Fixed 재시도 {study.settings.fixed_retries}회 · EXIT-LINK 최대 재시도 {study.settings.exit_link_max_retries}회
+            </div>
             <div className="grid grid-cols-2 gap-6" data-testid="story-rates">
-              <BigRate label="Fixed · 고정 경로" color="#C86A9A" value={pct(d.fixed_rate)} frac={`${d.fixed_success}/${d.fixed_n}`} ci={pctRange(d.fixed_ci_low, d.fixed_ci_high)} testId="story-rate-fixed" />
+              <BigRate label={`Fixed · 고정 경로 · 재시도 ${study.settings.fixed_retries}회`} color="#C86A9A" value={pct(d.fixed_rate)} frac={`${d.fixed_success}/${d.fixed_n}`} ci={pctRange(d.fixed_ci_low, d.fixed_ci_high)} testId="story-rate-fixed" />
               <BigRate label="EXIT-LINK · 자동 재라우팅" color="#4A8FE0" value={pct(d.exit_link_rate)} frac={`${d.exit_link_success}/${d.exit_link_n}`} ci={pctRange(d.exit_link_ci_low, d.exit_link_ci_high)} testId="story-rate-exit" i={3} />
             </div>
             <div className="reveal mt-8 border-t border-white/10 pt-6" style={{ ['--i' as string]: 3 }}>
@@ -475,9 +480,11 @@ function CompareScene({ t000, still }: { t000?: ReplayCase; still: boolean }) {
             <p className="reveal mt-6 max-w-[60ch] text-[13px] leading-relaxed text-ink-3" style={{ ['--i' as string]: 4 }} data-testid="story-sample">
               유효 대응 쌍 <b className="font-medium text-ink-2">{d.pairs}</b>개 · 방식별 메시지 {d.messages_per_method}건 · 유효 셀 {study.sample.valid_cells}/{study.sample.planned_cells} · {study.label}.
               지표는 관측 구간 안 목적지 수신(delivered)입니다. 저장된 결과이며 실시간 값이 아닙니다.
+              {fairValid && <> 재시도 예산을 같게 맞춘 최종 공정 비교({fair.protocol} · {fair.sample.cells_planned}셀)는 별개 연구로, Analytics에서 볼 수 있습니다.</>}
             </p>
             <div className="reveal mt-6 flex flex-wrap gap-2" style={{ ['--i' as string]: 5 }}>
-              <Link to="/analytics" className="story-btn lift inline-flex items-center gap-2 rounded-full border border-white/15 px-4 py-2 text-[13px] text-ink hover:border-white/30" data-testid="story-analytics"><BarChart3 size={14} /> 전체 연구 결과(Analytics) <ArrowUpRight size={14} /></Link>
+              <Link to="/analytics?study=aligned_v3" className="story-btn lift inline-flex items-center gap-2 rounded-full border border-white/15 px-4 py-2 text-[13px] text-ink hover:border-white/30" data-testid="story-analytics"><BarChart3 size={14} /> 이 결과 자세히 · {study.protocol} <ArrowUpRight size={14} /></Link>
+              {fairValid && <Link to="/analytics" className="story-btn lift inline-flex items-center gap-2 rounded-full border border-ice/30 bg-ice/[0.07] px-4 py-2 text-[13px] text-ice hover:text-ink" data-testid="story-analytics-fair"><BarChart3 size={14} /> 최종 공정 비교 · {fair.protocol} <ArrowUpRight size={14} /></Link>}
               <Link to="/twin?mode=cinematic&case=t010" className="story-btn lift inline-flex items-center gap-2 rounded-full bg-gradient-to-b from-[#F4F8FF] to-[#C6D6EC] px-4 py-2 text-[13px] font-semibold text-[#0A1220]" data-testid="story-demo"><Clapperboard size={14} /> Digital Twin 데모 시작 <ArrowUpRight size={14} /></Link>
             </div>
           </div>
@@ -487,7 +494,7 @@ function CompareScene({ t000, still }: { t000?: ReplayCase; still: boolean }) {
               <div className="reveal rounded-3xl border border-white/[0.08] bg-white/[0.02] p-5" style={{ ['--i' as string]: 3 }} data-testid="story-t000">
                 <div className="flex flex-wrap items-baseline justify-between gap-2">
                   <div className="text-[13px] text-ink">사례 t000 · Fixed · {t000.cell.condition} · {t000.cell.fault_timing}</div>
-                  <span className="rounded-full border border-white/12 px-2 py-0.5 text-[11px] text-ink-3">사례 1건 · 통계 표본 아님</span>
+                  <span className="rounded-full border border-white/12 px-2 py-0.5 text-[11px] text-ink-3">{study.protocol} 기록 · 사례 1건 · 통계 표본 아님</span>
                 </div>
                 <div className="mt-3 grid items-center gap-4 sm:grid-cols-[minmax(0,1fr)_minmax(0,1.1fr)]">
                   <StoryNetwork trial={t000} t={t000.clock.observation_end_offset_ms ?? 0} focus={null} still={still} label="t000 관측 구간 끝의 네트워크 상태" className="w-full" />
